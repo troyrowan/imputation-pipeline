@@ -55,8 +55,10 @@ Then run imputation pipeline with the following command, specifying an appropria
 a log file:\
 `snakemake -s imputation.snakefile --configfile config/my_imprun_config.json --cores 60 -p &> my_imprun_snakemakerun.log`
 
-### Endpoint genotypes
+### Endpoint files
 The pipeline as is outputs the following files:
+* Filter logging counts
+    + A single file that has filter logging for each filtering step (SNP call rate, individual call rate, and HWE p-value) for each assay. 
 * Concatenated hardcall/dosage VCF file (in `run_name/imputed_genotypes/` subdirectory)
     + This is the version of VCF file that comes out of Minimac where genotyeps are represnted like: `1|1:1.999`
     + Here the first half of each SNP for each individual is a phased hard call and after the : is the additive dosage genotype
