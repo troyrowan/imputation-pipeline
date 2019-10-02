@@ -1,6 +1,6 @@
 ##include: "bigrefprep.snakefile"
 #include: "190122_refcreation.snakefile"
-include: "qc_2.snakefile"
+include: "qc.snakefile"
 rule bigref_done: #Last file create is specified up here. Use expand to indicate how we want wild cards filled in.
 	input:#Standard outputs for the pipeline are a dosage vcf file and a hardcall only vcf file. Have ability to make dosage input for GEMMA and other file types
 		gen = expand("{run_name}/imputed_genotypes/{run_name}.vcf.gz",
@@ -148,19 +148,19 @@ rule hardcall_vcf:
 	input:
 		vcf = "{run_name}/minimac_imputed/combined_reordered/{run_name}.chr{chr}.reordered.vcf.gz"
 	params:
-		vcf = "{run_name}/concat_vcf/{run_name}.chr{chr}.hardcall.vcf"
+		vcf = "{run_name}/hardcall_vcf/{run_name}.chr{chr}.hardcall.vcf"
 	log:
 		"logs/hardcall_vcf/{run_name}.chr{chr}.log"
 	benchmark:
 		"benchmarks/hardcall_vcf/{run_name}.chr{chr}.benchmark.txt"
 	output:
-		vcf = "{run_name}/concat_vcf/{run_name}.chr{chr}.hardcall.vcf.gz"
+		vcf = "{run_name}/hardcall_vcf/{run_name}.chr{chr}.hardcall.vcf.gz"
 	shell:#This script pulls out only the hardcall vcf information from the minimac imputation output, keeps vcf format then bgzips and tabix
 		"(python bin/vcf_hardcall_conversion.py {input.vcf} {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}) > {log}"
 
 rule concat_hardcall_vcf:#Puts individual chromosome files back into a single VCF
 	input:
-		concat = expand("{{run_name}}/concat_vcf/{{run_name}}.chr{chr}.hardcall.vcf.gz", chr = list(range(1,30)))
+		concat = expand("{{run_name}}/hardcall_vcf/{{run_name}}.chr{chr}.hardcall.vcf.gz", chr = list(range(1,30)))
 	log:
 		"logs/concat_hardcall_vcf/{run_name}.log"
 	benchmark:
