@@ -2,7 +2,7 @@
 	"sample":[],
 	"gt_path":"",
 	"run_name":"",
-	"ref_dir":"/data/REF_HAPS/850K"
+	"ref_dir":"/data/REF_HAPS/850K/"
 	"hdref":"777962.180624.8853.A",
 	"f250ref":"227234.180624.28421.A",
 	"imp_ref_version":"180919_bigref",

@@ -1,7 +1,11 @@
 rule filter_target:
 	input:
-		#targ = expand("merged_files/{run_name}/{run_name}.bed", run_name = config["run_name"])
-		hwe = expand("hwe_filtered/{run_name}/{sample}.log", sample = config["sample"], run_name = config["run_name"])
+		#targ = expand("merged_files/{run_name}.bed", run_name = config["run_name"])
+		# hwe = expand("{run_name}/hwe_filtered/{sample}.log",
+		# sample = config["sample"],
+		# run_name = config["run_name"])
+		hwe = expand("{run_name}/merged_files/{run_name}.bed",
+		run_name = config["run_name"])
 	shell:
 		"rm .snakemake/*_tracking/*"
 
@@ -38,15 +42,13 @@ rule ref_alt:
 		allele = refalleledicter
 	params:
 		#inprefix = expand("{prefix}{{sample}}", prefix = config["gt_path"]),
-		oprefix = "ref_alt/{run_name}/{sample}"
+		oprefix = "{run_name}/ref_alt/{sample}"
 	benchmark:
-		"benchmarks/ref_alt/{run_name}/{sample}.txt"
-	log:
-		"logs/ref_alt/{run_name}/{sample}.log"
+		"{run_name}/benchmarks/ref_alt/{sample}.txt"
 	output:
-		bed = "ref_alt/{run_name}/{sample}.bed",
-		bim = "ref_alt/{run_name}/{sample}.bim",
-		fam = "ref_alt/{run_name}/{sample}.fam"
+		bed = "{run_name}/ref_alt/{sample}.bed",
+		bim = "{run_name}/ref_alt/{sample}.bim",
+		fam = "{run_name}/ref_alt/{sample}.fam"
 	shell:
 		#"(plink --bed {input.bed} --bim {input.bim} --fam {input.fam} --chr-set 32 --exclude maps/map_issues/190521_UMD_badsnps.txt --update-alleles {input.ref} --not-chr 0 --a1-allele {input.allele} --make-bed --real-ref-alleles --out {params.oprefix}) > {log}"
 		"(plink --ped {input.ped} --map {input.map} --chr-set 32 --update-alleles {input.ref} --not-chr 0 --a1-allele {input.allele} --make-bed --real-ref-alleles --out {params.oprefix}) > {log}"
@@ -55,41 +57,37 @@ rule ref_alt:
 #This just merges files (from previous step) with themselves, and takes care of duplicates
 rule no_duplicates:
 	input:
-		bed = "ref_alt/{run_name}/{sample}.bed",
-		bim = "ref_alt/{run_name}/{sample}.bim",
-		fam = "ref_alt/{run_name}/{sample}.fam"
+		bed = "{run_name}/ref_alt/{sample}.bed",
+		bim = "{run_name}/ref_alt/{sample}.bim",
+		fam = "{run_name}/ref_alt/{sample}.fam"
 	params:
-		inprefix = "ref_alt/{run_name}/{sample}",
-		oprefix = "no_duplicates/{run_name}/{sample}"
+		inprefix = "{run_name}/ref_alt/{sample}",
+		oprefix = "{run_name}/no_duplicates/{sample}"
 	benchmark:
-		"benchmarks/no_duplicates/{run_name}/{sample}.txt"
-	log:
-		"logs/no_duplicates/{run_name}/{sample}.log"
+		"{run_name}/benchmarks/no_duplicates/{sample}.txt"
 	output:
-		bed = "no_duplicates/{run_name}/{sample}.bed",
-		bim = "no_duplicates/{run_name}/{sample}.bim",
-		fam = "no_duplicates/{run_name}/{sample}.fam"
+		bed = "{run_name}/no_duplicates/{sample}.bed",
+		bim = "{run_name}/no_duplicates/{sample}.bim",
+		fam = "{run_name}/no_duplicates/{sample}.fam"
 	shell:
  		"(plink --bfile {params.inprefix} --bmerge {params.inprefix} --chr-set 32 --real-ref-alleles --make-bed --out {params.oprefix}) > {log}"
 #Calculates per-variant call rate
 rule variant_stats:
 	input:
-		bed = "no_duplicates/{run_name}/{sample}.bed",
-		bim = "no_duplicates/{run_name}/{sample}.bim",
-		fam = "no_duplicates/{run_name}/{sample}.fam"
+		bed = "{run_name}/no_duplicates/{sample}.bed",
+		bim = "{run_name}/no_duplicates/{sample}.bim",
+		fam = "{run_name}/no_duplicates/{sample}.fam"
 	threads : 4
 	priority:100
 	params:
-		inprefix = "no_duplicates/{run_name}/{sample}",
-		oprefix = "snp_stats/{run_name}/{sample}"
+		inprefix = "{run_name}/no_duplicates/{sample}",
+		oprefix = "{run_name}/snp_stats/{sample}"
 	benchmark:
-		"benchmarks/variant_stats/{run_name}/{sample}.txt"
-	log:
-		"logs/variant_stats/{run_name}/{sample}.log"
+		"{run_name}/benchmarks/variant_stats/{sample}.txt"
 	output:
-		frq = "snp_stats/{run_name}/{sample}.frq", #This is input for plotting script
-		log = "snp_stats/{run_name}/{sample}.log",
-		#png = "snp_stats/figures/{run_name}/{sample}.snp_call_rate.png"
+		frq = "{run_name}/snp_stats/{sample}.frq", #This is input for plotting script
+		log = "{run_name}/snp_stats/{sample}.log",
+		#png = "snp_stats/figures/{sample}.snp_call_rate.png"
 	shell:
 		"(plink --bfile {params.inprefix} --chr-set 32 --memory 500 --real-ref-alleles --nonfounders --freq --out {params.oprefix}) > {log}"
 		# "(plink --bfile {params.inprefix} --chr-set 32 --memory 500 --real-ref-alleles --nonfounders --freq --out {params.oprefix}; python bin/snp_call_rate_visualization.py {output.frq} {output.png}) > {log}"
@@ -101,24 +99,24 @@ rule variant_stats:
 #After call rate calculations, this performs the by-variant filtering
 rule filter_variants:
 	input:
-		bed = "no_duplicates/{run_name}/{sample}.bed",
-		bim = "no_duplicates/{run_name}/{sample}.bim",
-		fam = "no_duplicates/{run_name}/{sample}.fam",
-		stats = "snp_stats/{run_name}/{sample}.frq",
-		#png = "snp_stats/figures/{run_name}/{sample}.snp_call_rate.png"
+		bed = "{run_name}/no_duplicates/{sample}.bed",
+		bim = "{run_name}/no_duplicates/{sample}.bim",
+		fam = "{run_name}/no_duplicates/{sample}.fam",
+		stats = "{run_name}/snp_stats/{sample}.frq",
+		#png = "snp_stats/figures/{sample}.snp_call_rate.png"
 	threads : 4
 	priority:99
 	params:
-		inprefix = "no_duplicates/{run_name}/{sample}",
-		oprefix="snp_filtered/{run_name}/{sample}",
-		logprefix="filter_logs/{run_name}/{sample}"
+		inprefix = "{run_name}/no_duplicates/{sample}",
+		oprefix="{run_name}/snp_filtered/{sample}",
+		logprefix="{run_name}/filter_logs/{sample}"
 	benchmark:
-		"benchmarks/filter_variants/{run_name}/{sample}.txt"
+		"{run_name}/benchmarks/filter_variants/{sample}.txt"
 	output:
-		bed=temp("snp_filtered/{run_name}/{sample}.bed"),
-		bim=temp("snp_filtered/{run_name}/{sample}.bim"),
-		fam=temp("snp_filtered/{run_name}/{sample}.fam"),
-		log="snp_filtered/{run_name}/{sample}.log"
+		bed=temp("{run_name}/snp_filtered/{sample}.bed"),
+		bim=temp("{run_name}/snp_filtered/{sample}.bim"),
+		fam=temp("{run_name}/snp_filtered/{sample}.fam"),
+		log="{run_name}/snp_filtered/{sample}.log"
 	shell:
 		"plink --bfile {params.inprefix} --threads 4 --chr-set 32 --memory 500 --real-ref-alleles --not-chr 0 --geno .1 --make-bed --out {params.oprefix}"
 
@@ -128,19 +126,19 @@ rule filter_variants:
 #Output: output file suffixes will be .imiss, .lmiss
 rule individual_stats: #This step is performed on variant-filtered files
 	input:
-		bed = "snp_filtered/{run_name}/{sample}.bed",
-		bim = "snp_filtered/{run_name}/{sample}.bim",
-		fam = "snp_filtered/{run_name}/{sample}.fam",
+		bed = "{run_name}/snp_filtered/{sample}.bed",
+		bim = "{run_name}/snp_filtered/{sample}.bim",
+		fam = "{run_name}/snp_filtered/{sample}.fam",
 	params:
-		inprefix="snp_filtered/{run_name}/{sample}",
-		oprefix="individual_stats/{run_name}/{sample}"
+		inprefix="{run_name}/snp_filtered/{sample}",
+		oprefix="{run_name}/individual_stats/{sample}"
 	benchmark:
-		"benchmarks/individual_stats/{run_name}/{sample}.txt"
+		"{run_name}/benchmarks/individual_stats/{sample}.txt"
 	output:
-		imiss="individual_stats/{run_name}/{sample}.imiss",
-		lmiss="individual_stats/{run_name}/{sample}.lmiss",
-		log ="individual_stats/{run_name}/{sample}.log",
-		#png="individual_stats/figures/{run_name}/{sample}.individual_call_rate.png"
+		imiss="{run_name}/individual_stats/{sample}.imiss",
+		lmiss="{run_name}/individual_stats/{sample}.lmiss",
+		log ="{run_name}/individual_stats/{sample}.log",
+		#png="individual_stats/figures/{sample}.individual_call_rate.png"
 	shell:
 		"plink --bfile {params.inprefix} --chr-set 32 --memory 500 --real-ref-alleles --missing --out {params.oprefix}"
 		# "plink --bfile {params.inprefix} --chr-set 32 --memory 500 --real-ref-alleles --missing --out {params.oprefix}; python bin/individual_call_rate_visualization.py {output.imiss} {output.png}"
@@ -153,21 +151,21 @@ rule individual_stats: #This step is performed on variant-filtered files
 #PLINK filter (mind) -- Filters individuals based on specified call rate.  Individuals missing more than given proportion of their genotypes will be filtered out of the dataset.
 rule filter_individuals:
 	input:
-		bed = "snp_filtered/{run_name}/{sample}.bed",
-		bim = "snp_filtered/{run_name}/{sample}.bim",
-		fam = "snp_filtered/{run_name}/{sample}.fam",
-		imiss="individual_stats/{run_name}/{sample}.imiss",
-		#png="individual_stats/figures/{run_name}/{sample}.individual_call_rate.png"
+		bed = "{run_name}/snp_filtered/{sample}.bed",
+		bim = "{run_name}/snp_filtered/{sample}.bim",
+		fam = "{run_name}/snp_filtered/{sample}.fam",
+		imiss="{run_name}/individual_stats/{sample}.imiss",
+		#png="individual_stats/figures/{sample}.individual_call_rate.png"
 	params:
-		inprefix="snp_filtered/{run_name}/{sample}",
-		oprefix="individual_filtered/{run_name}/{sample}"
+		inprefix="{run_name}/snp_filtered/{sample}",
+		oprefix="{run_name}/individual_filtered/{sample}"
 	benchmark:
-		"benchmarks/filter_individuals/{run_name}/{sample}.txt"
+		"{run_name}/benchmarks/filter_individuals/{sample}.txt"
 	output:
-		bed="individual_filtered/{run_name}/{sample}.bed",
-		bim="individual_filtered/{run_name}/{sample}.bim",
-		fam="individual_filtered/{run_name}/{sample}.fam",
-		log="individual_filtered/{run_name}/{sample}.log"
+		bed="{run_name}/individual_filtered/{sample}.bed",
+		bim="{run_name}/individual_filtered/{sample}.bim",
+		fam="{run_name}/individual_filtered/{sample}.fam",
+		log="{run_name}/individual_filtered/{sample}.log"
 
 	shell: #Filter is set at 0.1 missing as a threshold for being dropped from the dataset
 		"plink --bfile {params.inprefix} --chr-set 32 --memory 500 --real-ref-alleles --mind .1  --make-bed --out {params.oprefix}"#; python bin/individual_filtered_log_parsing.py {output.log} {params.csv}"
@@ -176,18 +174,18 @@ rule filter_individuals:
 #Then visualizes with Python plotting script
 rule hwe_stats:
 	input:
-		bed="individual_filtered/{run_name}/{sample}.bed",
-		bim="individual_filtered/{run_name}/{sample}.bim",
-		fam="individual_filtered/{run_name}/{sample}.fam"
+		bed="{run_name}/individual_filtered/{sample}.bed",
+		bim="{run_name}/individual_filtered/{sample}.bim",
+		fam="{run_name}/individual_filtered/{sample}.fam"
 	params:
-		inprefix="individual_filtered/{run_name}/{sample}",
-		oprefix="hwe_stats/{run_name}/{sample}"
+		inprefix="{run_name}/individual_filtered/{sample}",
+		oprefix="{run_name}/hwe_stats/{sample}"
 	benchmark:
-		"benchmarks/hwe_stats/{run_name}/{sample}.txt"
+		"{run_name}/benchmarks/hwe_stats/{sample}.txt"
 	output:
-		hwe="hwe_stats/{run_name}/{sample}.hwe",
-		log="hwe_stats/{run_name}/{sample}.log",
-		#png="hwe_stats/figures/{run_name}/{sample}.hwe_pvalues.png"
+		hwe="{run_name}/hwe_stats/{sample}.hwe",
+		log="{run_name}/hwe_stats/{sample}.log",
+		#png="hwe_stats/figures/{sample}.hwe_pvalues.png"
 	shell:
 		"plink --bfile {params.inprefix} --chr-set 32 --memory 500 --real-ref-alleles --nonfounders --hardy --out {params.oprefix}"
 		# "plink --bfile {params.inprefix} --chr-set 32 --memory 500 --real-ref-alleles --nonfounders --hardy --out {params.oprefix}; python bin/hwe_visualization.py {output.hwe} {output.png}"
@@ -196,20 +194,20 @@ rule hwe_stats:
 # We've set this value at 1e-50, but this is context dependent on dataset. Composite reference data this will drop A TON of variants, even though they're perfectly fine
 rule filter_hwe_variants:
 	input:
-		bed="individual_filtered/{run_name}/{sample}.bed",
-		bim="individual_filtered/{run_name}/{sample}.bim",
-		fam="individual_filtered/{run_name}/{sample}.fam",
-		stats="hwe_stats/{run_name}/{sample}.hwe",
+		bed="{run_name}/individual_filtered/{sample}.bed",
+		bim="{run_name}/individual_filtered/{sample}.bim",
+		fam="{run_name}/individual_filtered/{sample}.fam",
+		stats="{run_name}/hwe_stats/{sample}.hwe",
 	params:
-		inprefix="individual_filtered/{run_name}/{sample}",
-		oprefix="hwe_filtered/{run_name}/{sample}"
+		inprefix="{run_name}/individual_filtered/{sample}",
+		oprefix="{run_name}/hwe_filtered/{sample}"
 	benchmark:
-		"benchmarks/filter_hwe_variants/{run_name}/{sample}.txt"
+		"{run_name}/benchmarks/filter_hwe_variants/{sample}.txt"
 	output:
-		bed="hwe_filtered/{run_name}/{sample}.bed",
-		bim="hwe_filtered/{run_name}/{sample}.bim",
-		fam="hwe_filtered/{run_name}/{sample}.fam",
-		log="hwe_filtered/{run_name}/{sample}.log"
+		bed="{run_name}/hwe_filtered/{sample}.bed",
+		bim="{run_name}/hwe_filtered/{sample}.bim",
+		fam="{run_name}/hwe_filtered/{sample}.fam",
+		log="{run_name}/hwe_filtered/{sample}.log"
 	shell:
 		"plink --bfile {params.inprefix} --chr-set 32 --memory 500 --real-ref-alleles --nonfounders --exclude subsetted_test/190903_UMD_GELtest/badsnps.txt --hwe 1e-50 --make-bed --out {params.oprefix}"
 
@@ -222,48 +220,48 @@ rule filter_hwe_variants:
 ##Output: output file suffixes will be (.bed, .bim, .fam, .log, .sexcheck, .missexed_animals.txt)
 # rule impute_sex:
 # 	input:
-# 		bed="hwe_filtered/{run_name}/{sample}.bed",
-# 		bim="hwe_filtered/{run_name}/{sample}.bim",
-# 		fam="hwe_filtered/{run_name}/{sample}.fam"
+# 		bed="hwe_filtered/{sample}.bed",
+# 		bim="hwe_filtered/{sample}.bim",
+# 		fam="hwe_filtered/{sample}.fam"
 # 	params:
-# 		logprefix="filter_logs/{run_name}/{sample}",
-# 		inprefix="hwe_filtered/{run_name}/{sample}",
-# 		oprefix="sex_impute/{run_name}/{sample}"
+# 		logprefix="filter_logs/{sample}",
+# 		inprefix="hwe_filtered/{sample}",
+# 		oprefix="sex_impute/{sample}"
 # 	benchmark:
-# 		"benchmarks/impute_sex/{run_name}/{sample}.txt"
+# 		"{run_name}/benchmarks/impute_sex/{sample}.txt"
 # 	output:
-# 		bed=temp("sex_impute/{run_name}/{sample}.bed"),
-# 		bim=temp("sex_impute/{run_name}/{sample}.bim"),
-# 		fam=temp("sex_impute/{run_name}/{sample}.fam"),
-# 		log="sex_impute/{run_name}/{sample}.log",
-# 		sexcheck="sex_impute/{run_name}/{sample}.sexcheck",
-# 		txt="sex_impute/{run_name}/{sample}.missexed_animals.txt"
+# 		bed=temp("sex_impute/{sample}.bed"),
+# 		bim=temp("sex_impute/{sample}.bim"),
+# 		fam=temp("sex_impute/{sample}.fam"),
+# 		log="sex_impute/{sample}.log",
+# 		sexcheck="sex_impute/{sample}.sexcheck",
+# 		txt="sex_impute/{sample}.missexed_animals.txt"
 # 	shell:
 # 		"plink --bfile {params.inprefix} --chr-set 32 --memory 500 --real-ref-alleles --impute-sex ycount --make-bed --out {params.oprefix}; python bin/missexed_animals_filter.py {output.sexcheck} {output.txt}"# python bin/missexed_animals_filter_logging.py {output.txt} {output.log} {params.csv}" #{params.logprefix}.csv"
 #
-# #PLINK function (remove) takes "sex_impute/{run_name}/{sample}.missexed_animals.txt" and produces new bed file without listed IDs, removing missexed animals
+# #PLINK function (remove) takes "sex_impute/{sample}.missexed_animals.txt" and produces new bed file without listed IDs, removing missexed animals
 # #Input File Locations: sex_impute/
 # #Output File Locations: correct_sex/
 # #Output File Types: (.bed, .bim, .fam, .log, .hh, .nosex)
 #
 # rule remove_missexed_animals:
 # 	input:
-# 		txt="sex_impute/{run_name}/{sample}.missexed_animals.txt",
-# 		bed="sex_impute/{run_name}/{sample}.bed",
-# 		bim="sex_impute/{run_name}/{sample}.bim",
-# 		fam="sex_impute/{run_name}/{sample}.fam"
+# 		txt="sex_impute/{sample}.missexed_animals.txt",
+# 		bed="sex_impute/{sample}.bed",
+# 		bim="sex_impute/{sample}.bim",
+# 		fam="sex_impute/{sample}.fam"
 # 	params:
-# 		inprefix="sex_impute/{run_name}/{sample}",
-# 		oprefix="correct_sex/{run_name}/{sample}"
+# 		inprefix="sex_impute/{sample}",
+# 		oprefix="correct_sex/{sample}"
 # 	benchmark:
-# 		"benchmarks/remove_missexed_animals/{run_name}/{sample}.txt"
+# 		"{run_name}/benchmarks/remove_missexed_animals/{sample}.txt"
 # 	output:
-# 		bed="correct_sex/{run_name}/{sample}.bed",
-# 		bim="correct_sex/{run_name}/{sample}.bim",
-# 		fam="correct_sex/{run_name}/{sample}.fam",
-# 		#hh=temp("correct_sex/{run_name}/{sample}.hh"),
-# 		#nosex=temp("correct_sex/{run_name}/{sample}.nosex"),
-# 		log="correct_sex/{run_name}/{sample}.log",
+# 		bed="correct_sex/{sample}.bed",
+# 		bim="correct_sex/{sample}.bim",
+# 		fam="correct_sex/{sample}.fam",
+# 		#hh=temp("correct_sex/{sample}.hh"),
+# 		#nosex=temp("correct_sex/{sample}.nosex"),
+# 		log="correct_sex/{sample}.log",
 # 	shell:
 # 		"plink --bfile {params.inprefix} --chr-set 32 --memory 500 --real-ref-alleles --remove {input.txt} --make-bed --out {params.oprefix}"
 
@@ -271,20 +269,20 @@ rule filter_hwe_variants:
 #Parses log files and prints to sdout, point that to a filtering report.
 rule filter_logging:
 	input:
-		snp = expand("snp_filtered/{{run_name}}/{sample}.log", sample = config["sample"]),
-		ind = expand("individual_filtered/{{run_name}}/{sample}.log", sample = config["sample"]),
-		hwe = expand("hwe_filtered/{{run_name}}/{sample}.log", sample = config["sample"])
-		#sex = "sex_impute/{run_name}/{sample}.log",
-		#mis = "sex_impute/{run_name}/{sample}.missexed_animals.txt",
-		#cor = "correct_sex/{run_name}/{sample}.bed"
+		snp = expand("{{run_name}}/snp_filtered/{sample}.log", sample = config["sample"]),
+		ind = expand("{{run_name}}/individual_filtered/{sample}.log", sample = config["sample"]),
+		hwe = expand("{{run_name}}/hwe_filtered/{sample}.log", sample = config["sample"])
+		#sex = "sex_impute/{sample}.log",
+		#mis = "sex_impute/{sample}.missexed_animals.txt",
+		#cor = "correct_sex/{sample}.bed"
 	params:
 		prefix = "{run_name}"
 	benchmark:
-		"benchmarks/filter_logging/{run_name}/{run_name}.txt"
+		"{run_name}/benchmarks/filter_logging/{run_name}.txt"
 	log:
-		"logs/filter_logging/{run_name}/{run_name}.log"
+		"logs/filter_logging/{run_name}.log"
 	output:
-		log = "filter_logs/{run_name}/{run_name}_filtering_report.txt"
+		log = "{run_name}/filter_logs/{run_name}_filtering_report.txt"
 	shell:
 		"python bin/combined_filter_logging.py {params.prefix} > {output.log}"
 #Filtering report will be in the following format:
@@ -318,24 +316,24 @@ rule filter_logging:
 #Because we use reference-based phasing, these missing markers aren't filled in by Eagle (saving a step of removing Eagle-inferred genotypes prior to imputation)
 rule merge_assays:
 	input:
-		expand("hwe_filtered/{{run_name}}/{sample}.bed", sample = config["sample"]),
-		expand("hwe_filtered/{{run_name}}/{sample}.bim", sample = config["sample"]),
-		expand("hwe_filtered/{{run_name}}/{sample}.fam", sample = config["sample"]),
-		expand("hwe_filtered/{{run_name}}/{sample}.log", sample = config["sample"]),
+		expand("{{run_name}}/hwe_filtered/{sample}.bed", sample = config["sample"]),
+		expand("{{run_name}}/hwe_filtered/{sample}.bim", sample = config["sample"]),
+		expand("{{run_name}}/hwe_filtered/{sample}.fam", sample = config["sample"]),
+		expand("{{run_name}}/hwe_filtered/{sample}.log", sample = config["sample"]),
 		# expand("individual_filtered/{{run_name}}/{sample}.bed", sample = config["sample"]),
 		# expand("individual_filtered/{{run_name}}/{sample}.bim", sample = config["sample"]),
 		# expand("individual_filtered/{{run_name}}/{sample}.fam", sample = config["sample"]),
 		# expand("individual_filtered/{{run_name}}/{sample}.log", sample = config["sample"]),
-		"filter_logs/{run_name}/{run_name}_filtering_report.txt"
+		"{run_name}/filter_logs/{run_name}_filtering_report.txt"
 	params:
-		oprefix="merged_files/{run_name}/{run_name}",
-		pfiles = "hwe_filtered/{run_name}"
+		oprefix="{run_name}/merged_files/{run_name}",
+		pfiles = "{run_name}/hwe_filtered/{run_name}"
 		#pfiles = "individual_filtered/{run_name}"
 	output:
-		mergefilelist= "merged_files/{run_name}/{run_name}.allfiles.txt",
-		bim = "merged_files/{run_name}/{run_name}.bim",
-		fam = "merged_files/{run_name}/{run_name}.fam",
-		log = "merged_files/{run_name}/{run_name}.log",
-		bed = "merged_files/{run_name}/{run_name}.bed"
+		mergefilelist= "{run_name}/merged_files/{run_name}.allfiles.txt",
+		bim = "{run_name}/merged_files/{run_name}.bim",
+		fam = "{run_name}/merged_files/{run_name}.fam",
+		log = "{run_name}/merged_files/{run_name}.log",
+		bed = "{run_name}/merged_files/{run_name}.bed"
 	shell: #This list maker creates a list of all assays being imputed. This is given to PLINK's "--merge-list" command
 		"python bin/file_list_maker.py {params.pfiles} {output.mergefilelist}; plink --merge-list {output.mergefilelist} --chr-set 32 --merge-equal-pos --real-ref-alleles --make-bed --out {params.oprefix}"
