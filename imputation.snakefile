@@ -2,7 +2,7 @@
 #include: "190122_refcreation.snakefile"
 include: "qc.snakefile"
 rule bigref_done: #Last file create is specified up here. Use expand to indicate how we want wild cards filled in.
-	input:
+	input:#Standard outputs for the pipeline are a dosage vcf file and a hardcall only vcf file. Have ability to make dosage input for GEMMA and other file types
 		gen = expand("imputed_genotypes/{run_name}/{run_name}.vcf.gz", run_name = config["run_name"]),
 		mgf = expand("imputed_genotypes/{run_name}/{run_name}.hardcall.vcf.gz", run_name = config["run_name"]),
 		chroms = expand("imputed_genotypes_single_chrom/{run_name}/{run_name}.chr{chr}.dose.mgf.gz", run_name = config["run_name"], chr = list(range(1,30)))
@@ -15,7 +15,7 @@ rule bigref_done: #Last file create is specified up here. Use expand to indicate
 #Splits into chromosomes for parallelization
 rule assay_chrsplit:
 	input:
-		# bed = "subsetted_test/{run_name}/{run_name}.SNP50.bed",
+		# bed = "subsetted_test/{run_name}/{run_name}.SNP50.bed", #For testing only
 		# bim = "subsetted_test/{run_name}/{run_name}.SNP50.bim",
 		# fam = "subsetted_test/{run_name}/{run_name}.SNP50.fam",
 		bed = "merged_files/{run_name}/{run_name}.bed",
@@ -39,12 +39,15 @@ rule assay_chrsplit:
 
 rule bigref_phasing:
 	input: #This is using ALL HD individuals as the phasing reference (HD individuals are treated as true haplotypes)
-		refvcf = expand("reference/{ref_version}/{sample}.chr{{chr}}.vcf.gz", ref_version = config["phasing_ref_version"], sample = config["hdref"]), #References what HD are called from config file, also which reference version to use
+		refvcf = expand("{ref_dir}/{ref_version}/{sample}.chr{{chr}}.vcf.gz",
+		ref_dir = config["ref_dir"],
+		ref_version = config["phasing_ref_version"],
+		sample = config["hdref"]), #References what HD are called from config file, also which reference version to use
 		#refvcf = expand("vcf_per_assay/{run_name}/{sample}.chr{{chr}}.vcf.gz", run_name = config["phasing_ref_version"], sample = config["hdref"]),
 		vcf = "assay_raw_vcf/{run_name}/{run_name}.chr{chr}.vcf.gz", #Input file generated above
 		tabix = "assay_raw_vcf/{run_name}/{run_name}.chr{chr}.vcf.gz.tbi"#Ensures tabix file was created for target genotypes
 	params:
-		imputemap = "/usr/local/bin/Eagle_v2.4/tables/genetic_map_1cMperMb.txt",
+		imputemap = "bin/genetic_map_1cMperMb.txt",#This may be an issue if Eagle is installed somewhere else. One of the few hardcoded files in the pipeline
 		out="eagle_merged/{run_name}/{run_name}.chr{chr}",
 		chrx = "{chr}" #Chromosome wildcard for Eagle
 	threads: 10 #Allow Eagle to use 10 cores per job, it will use this many, but not more. When we give 60 cores, 6 phasing jobs happen at a time
@@ -56,17 +59,19 @@ rule bigref_phasing:
 	output:
 		vcf = "eagle_merged/{run_name}/{run_name}.chr{chr}.vcf.gz", #Eagle outputs a bgzipped VCF file, we tabix in this step
 		tabix = "eagle_merged/{run_name}/{run_name}.chr{chr}.vcf.gz.tbi"
-	shell: #This is for reference-based phasing in Eagle onlyself.
-	#Is allowRefAltSwap necessary here? What is that doing. Doublecheckself.
+	shell: #This is for reference-based phasing in Eagle
+	#Is allowRefAltSwap necessary here? What is that doing. Doublecheck.
 		"(eagle --vcfRef {input.refvcf} --vcfTarget {input.vcf} --geneticMapFile {params.imputemap} --allowRefAltSwap --chromX {params.chrx} --numThreads 10 --outPrefix {params.out}; tabix {output.vcf})> {log}"
 
 rule imputation: #A single round of imputation for all target assays.
 	input: #Reference files are cross-imputed HD/F250 assays for all individuals genotyped on either or both assays
-		ref = expand("reference/combined/{ref_version}/bigref.850k.chr{{chr}}.m3vcf.gz", ref_version = config["imp_ref_version"], sample = config["hdref"]),
-		reftbi = expand("reference/combined/{ref_version}/bigref.850k.chr{{chr}}.m3vcf.gz", ref_version = config["imp_ref_version"], sample = config["hdref"]),
+		ref = expand("{ref_dir}/{ref_version}/bigref.850k.chr{{chr}}.m3vcf.gz",
+		ref_dir = config["ref_dir"],
+		ref_version = config["imp_ref_version"],
+		sample = config["hdref"]),
 		haps = "eagle_merged/{run_name}/{run_name}.chr{chr}.vcf.gz", #Phased VCF of target assays
 		hapstbi = "eagle_merged/{run_name}/{run_name}.chr{chr}.vcf.gz.tbi",
-		rmap = "phasing_maps/imputemap.chr{chr}.map" #Only needed when imputing with Minimac4
+		#rmap = "phasing_maps/imputemap.chr{chr}.map" #Only needed when imputing with Minimac4
 	threads: 5 #Minimac rarely uses more than 5 cores, have set this as optimal allocation of resources.
 	params:
 		oprefix = "minimac_imputed/{run_name}/{run_name}.chr{chr}",
@@ -148,10 +153,10 @@ rule hardcall_vcf:
 		"benchmarks/hardcall_vcf/{run_name}/{run_name}.chr{chr}.benchmark.txt"
 	output:
 		vcf = "concat_vcf/{run_name}/{run_name}.chr{chr}.hardcall.vcf.gz"
-	shell:
+	shell:#This script pulls out only the hardcall vcf information from the minimac imputation output, keeps vcf format then bgzips and tabix
 		"(python bin/vcf_hardcall_conversion.py {input.vcf} {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}) > {log}"
 
-rule concat_hardcall_vcf:
+rule concat_hardcall_vcf:#Puts individual chromosome files back into a single VCF
 	input:
 		concat = expand("concat_vcf/{{run_name}}/{{run_name}}.chr{chr}.hardcall.vcf.gz", chr = list(range(1,30)))
 	log:
@@ -159,9 +164,10 @@ rule concat_hardcall_vcf:
 	benchmark:
 		"benchmarks/concat_hardcall_vcf/{run_name}/{run_name}.benchmark.txt"
 	output:
-		vcf = "imputed_genotypes/{run_name}/{run_name}.hardcall.vcf.gz"
+		vcf = "imputed_genotypes/{run_name}/{run_name}.hardcall.vcf.gz",
+		tbi = "imputed_genotypes/{run_name}/{run_name}.hardcall.vcf.gz.tbi"
 	shell:
-		"(bcftools concat {input.concat} -O z -o {output.vcf})"
+		"(bcftools concat {input.concat} -O z -o {output.vcf}; tabix {output.vcf})"
 #Use BCFtools to combine individual sorted VCF files
 rule concat_vcf:
 	input:

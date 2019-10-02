@@ -49,7 +49,7 @@ rule ref_alt:
 		fam = "ref_alt/{run_name}/{sample}.fam"
 	shell:
 		#"(plink --bed {input.bed} --bim {input.bim} --fam {input.fam} --chr-set 32 --exclude maps/map_issues/190521_UMD_badsnps.txt --update-alleles {input.ref} --not-chr 0 --a1-allele {input.allele} --make-bed --real-ref-alleles --out {params.oprefix}) > {log}"
-		"(plink --ped {input.ped} --map {input.map} --chr-set 32 --update-alleles {input.ref} --exclude maps/map_issues/190521_UMD_badsnps.txt --not-chr 0 --a1-allele {input.allele} --make-bed --real-ref-alleles --out {params.oprefix}) > {log}"
+		"(plink --ped {input.ped} --map {input.map} --chr-set 32 --update-alleles {input.ref} --not-chr 0 --a1-allele {input.allele} --make-bed --real-ref-alleles --out {params.oprefix}) > {log}"
 
 #Creative, easier way to identify duplicates (individuals genotyped multiple times on the same assay)
 #This just merges files (from previous step) with themselves, and takes care of duplicates
@@ -97,7 +97,7 @@ rule variant_stats:
 #Creates a histogram of the missing genotype rate for each SNP in the dataset.  This call rate is calculated for each SNP as (NCHROBS)/max(NCHROBS)
 #Writes figure to a .png file
 #Histogram uses 100 bins, and a y-axis max of 5000 SNPs, which look good for existing assays, but can be easily adjusted.
-
+#UPDATE: Python code for plotting not working at the moment
 #After call rate calculations, this performs the by-variant filtering
 rule filter_variants:
 	input:
@@ -332,7 +332,7 @@ rule merge_assays:
 		pfiles = "hwe_filtered/{run_name}"
 		#pfiles = "individual_filtered/{run_name}"
 	output:
-		mergefilelist= "individual_filtered/{run_name}/{run_name}.allfiles.txt",
+		mergefilelist= "merged_files/{run_name}/{run_name}.allfiles.txt",
 		bim = "merged_files/{run_name}/{run_name}.bim",
 		fam = "merged_files/{run_name}/{run_name}.fam",
 		log = "merged_files/{run_name}/{run_name}.log",
