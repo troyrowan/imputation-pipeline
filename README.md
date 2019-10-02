@@ -8,7 +8,7 @@ Navigate to directory where you want to setup imputation pipeline and clone repo
 Set up imputation conda environment from .yml file in directory\
 `conda env create -f imputation_env.yml`
 
-Activate environment\
+Activate environment (This needs to be done every time prior to running Snakemake)\
 `source activate Imp3`
 
 ### Setting up config files for imputation
