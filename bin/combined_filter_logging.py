@@ -3,12 +3,12 @@ import glob
 from sys import argv
 script, runname = argv
 
-filenames = [xx.strip("ref_alt/").strip(".log") for xx in glob.glob("ref_alt/" + runname + "/*log")]
-
+filenames = [xx.strip(runname + "/ref_alt/").strip(".log") for xx in glob.glob(runname + "/ref_alt/" + "*log")]
+print(filenames)
 for xx in filenames:
-    snpfile = "snp_filtered/" + xx + ".log"
-    indfile = "individual_filtered/" + xx + ".log"
-    hwefile = "hwe_filtered/" + xx + ".log"
+    snpfile = runname + "/snp_filtered/" + xx + ".log"
+    indfile = runname + "/individual_filtered/" + xx + ".log"
+    hwefile = runname + "/hwe_filtered/" + xx + ".log"
     with open(snpfile, "r") as snp:
         for line in snp:
             if "--bfile" in line:
@@ -17,7 +17,7 @@ for xx in filenames:
                 print("SNP_Filtering")
             if "variants loaded from .bim file" in line:
                 start_snps = line.split()[0]
-                print("StartingSNPs:\t", start_snps)
+                print("StartingSNPs:\t" + start_snps)
             if "removed due to missing genotype data" in line:
                 rem_snps = line.split()[0]
                 end_snps = int(start_snps) - int(rem_snps)
@@ -54,7 +54,7 @@ for xx in filenames:
             if "variants loaded from .bim file" in line:
                 start_snps = line.split()[0]
                 print("HWE_Filtering")
-                print("StartingSNPs:\t", start_snps)
+                print("StartingSNPs:\t" + start_snps)
             if "removed due to Hardy-Weinberg exact test." in line:
                 rem_snps = line.split()[1]
                 end_snps = int(start_snps) - int(rem_snps)
