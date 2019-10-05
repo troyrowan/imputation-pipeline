@@ -324,7 +324,7 @@ rule merge_assays:
 		# expand("individual_filtered/{{run_name}}/{sample}.bim", sample = config["sample"]),
 		# expand("individual_filtered/{{run_name}}/{sample}.fam", sample = config["sample"]),
 		# expand("individual_filtered/{{run_name}}/{sample}.log", sample = config["sample"]),
-		"{run_name}/filter_logs/{run_name}_filtering_report.txt"
+		#"{run_name}/filter_logs/{run_name}_filtering_report.txt"
 	params:
 		oprefix="{run_name}/merged_files/{run_name}",
 		pfiles = "{run_name}/hwe_filtered"

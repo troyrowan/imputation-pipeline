@@ -9,6 +9,7 @@ for xx in filenames:
     snpfile = runname + "/snp_filtered/" + xx + ".log"
     indfile = runname + "/individual_filtered/" + xx + ".log"
     hwefile = runname + "/hwe_filtered/" + xx + ".log"
+    print(snpfile)
     with open(snpfile, "r") as snp:
         for line in snp:
             if "--bfile" in line:
