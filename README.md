@@ -6,7 +6,9 @@ Navigate to directory where you want to setup imputation pipeline and clone repo
 `git clone git@github.com:troyrowan/imputation-pipeline.git`
 
 Set up imputation conda environment from .yml file in directory\
-`conda env create -f imputation_env.yml`
+The first weird bit of the command deals with some weird dependency issues that I was having before\
+Solution came from: https://stackoverflow.com/questions/55661167/how-to-fix-condavalueerror-invalid-environment-name-in-conda-terminal-when-i \
+`CONDA_RESTORE_FREE_CHANNEL=1 conda env create -f imputation_env.yml`
 
 Activate environment (This needs to be done every time prior to running Snakemake)\
 `source activate Imp3`
