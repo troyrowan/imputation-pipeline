@@ -38,5 +38,6 @@ toAlpha/peds/*
 *.hap
 *.png
 *.vcf
+bin/Imp3/*
 *.csv
 bin/oldbin/*
