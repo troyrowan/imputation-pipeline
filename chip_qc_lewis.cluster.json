@@ -1,0 +1,11 @@
+{
+    "__default__":
+    {
+        "p" : "General,Lewis,BioCompute,htc4,hpc5",
+        "account" : "animalsci",
+        "mem" : 2G,
+        "c": 4,
+        "t": "2:00:00",
+        "o": "log/slurm_out/joint_genotyping/{rule}/{wildcards}.%j.out"
+    }
+}
