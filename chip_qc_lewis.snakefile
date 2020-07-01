@@ -12,8 +12,11 @@ rule filter_target:
 
 		hwe = expand("imputation_runs/imputation_runs/{run_name}/merged_files/{run_name}.bed",
 		run_name = config["run_name"])
+	prarms:
+		nosex = "imputation_runs/{run_name}/*/*nosex",
+		hh = "imputation_runs/{run_name}/*/*hh" #cleaning up automatically generated, no-information PLINK files. 
 	shell:
-		"rm .snakemake/*_tracking/*"
+		"rm .snakemake/*_tracking/*; rm {params.nosex}, rm {params.hh}"
 
 #Map dictionary is copied into each new config file allowing run-by-run changes to map file
 #This dict will need to be changed as new assays are added.
