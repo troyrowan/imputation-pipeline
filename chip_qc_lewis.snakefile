@@ -3,9 +3,9 @@ configfile: "source_functions/config/find_dups.config.yaml"
 # Make log directories if they don't exist
 for x in expand("log/slurm_out/{rules}", rules = config['rules']):
     os.makedirs(x, exist_ok = True)
-for x in expand("log/psrecord/joint_genotyping/{rules}", rules = config['rules']):
+for x in expand("log/{run_name}/psrecord/{rule}", rule = config['rules']):
     os.makedirs(x, exist_ok = True)
-
+		psrecord = "log/{run_name}/psrecord/ref_alt/ref_alt.{sample}.log"
 #Generates a single merged file with all filtering
 rule filter_target:
 	input:
@@ -224,7 +224,7 @@ rule filter_hwe_variants:
 		filter = config["hwe_filter"],
 		psrecord = "log/{run_name}/psrecord/filter_hwe_variants/filter_hwe_variants.{sample}.log"
 	output:
-		bed="imputation_runs/{run_name}/hwe_filtered/{sample}.bed",
+		bed=temp("imputation_runs/{run_name}/hwe_filtered/{sample}.bed"),
 		bim="imputation_runs/{run_name}/hwe_filtered/{sample}.bim",
 		fam="imputation_runs/{run_name}/hwe_filtered/{sample}.fam",
 		log="imputation_runs/{run_name}/hwe_filtered/{sample}.log"
