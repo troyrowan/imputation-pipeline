@@ -6,6 +6,6 @@
         "mem" : 2G,
         "c": 4,
         "t": "2:00:00",
-        "o": "log/slurm_out/joint_genotyping/{rule}/{wildcards}.%j.out"
+        "o": "log/{wildcards.run_name}/slurm_out/{rule}/{wildcards}.%j.out"
     }
 }
