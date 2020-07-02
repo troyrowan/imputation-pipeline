@@ -27,13 +27,19 @@ rule recode_vcf:
 		oprefix="imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}",
 		vcf="imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf",
 		threads=config["plink_threads"],
-		mem=config["plink_mem"]
+		mem=config["plink_mem"],
+		psrecord = "log/{run_name}/psrecord/recode_vcf/recode_vcf.{sample}.log"
 	output:
 		vcf=temp("imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf.gz"),
 		tabix=temp("imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf.gz.tbi"),
 	shell:
 		#This step is an issue in within-breed situatoins. Not sure why the --maf works for bigref and not for within breed, but leads to there being SNPs that are actually fixed, but are guessed to have an 01 genotype in eagle (and thus what is actually T . can't handle knowing that there is a 01)
-		"plink --bfile {params.inprefix} --nonfounders --chr {params.chrom} --cow --memory {params.mem} --threads {params.threads} --real-ref-alleles --recode vcf --maf 0.0000001 --out {params.oprefix}; bgzip {params.vcf}; tabix {output.vcf}"
+
+		"""
+		module load plink
+		module load bcftools
+		psrecord "plink --bfile {params.inprefix} --nonfounders --chr {params.chrom} --cow --memory {params.mem} --threads {params.threads} --real-ref-alleles --recode vcf --maf 0.0000001 --out {params.oprefix}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
+		"""
 		#"(plink --bfile {params.inprefix} --nonfounders --chr {params.chrom} --chr-set 33 --memory 500 --maf 0.0001 --real-ref-alleles --make-bed --out {params.oprefix}) > {log}"
 
 rule eagle_merged:
@@ -43,22 +49,30 @@ rule eagle_merged:
 	params:
 		iprefix="imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.merged",
 		out="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased",
-		threads=config["eagle_threads"]
+		threads=config["eagle_threads"],
+		psrecord = "log/{run_name}/psrecord/eagle_merged/eagle_merged.{sample}.log"
 	output:
 		vcf="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz",
 		tabix="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz.tbi"
 	shell:
-		"eagle --vcf {input.vcf} --geneticMapFile {input.map} --numThreads {params.threads} --chromX 32 --outPrefix {params.out}; tabix {output.vcf}"
+		"""
+		module load bcftools
+		psrecord " ~/Eagle_v2.4.1/eagle --vcf {input.vcf} --geneticMapFile {input.map} --numThreads {params.threads} --chromX 32 --outPrefix {params.out}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
+		"""
 
 rule make_phasing_vcf_extract_lists:
 	input:
 		bim=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.bim", sample=config["ref_assays"]),
 		fam=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.fam", sample=config["ref_assays"])
+	params:
+		psrecord = "log/{run_name}/psrecord/make_phasing_vcf_extract_lists/make_phasing_vcf_extract_lists.{sample}.log"
 	output:
 		keep_ids="imputation_runs/{run_name}/vcf_per_assay/{sample}.keepvcf",
 		keep_snps="imputation_runs/{run_name}/vcf_per_assay/{sample}.vcfregion"
 	shell:
-		"python bin/vcf_extraction_maker.py {input.bim} {input.fam} {output.keep_snps} {output.keep_ids}"
+		"""
+		psrecord "python bin/vcf_extraction_maker.py {input.bim} {input.fam} {output.keep_snps} {output.keep_ids}" --log {params.psrecord} --include-children --interval 5
+		"""
 
 # rule fix_alleles:
 # 	input:
@@ -83,12 +97,16 @@ rule refvcf_per_assay: #filter the vcfs on a per assay basis
 		#keep_ids="extract_lists/{run_name}/{sample}.chr{chr}.keepvcf",
 		keep_maps="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcfregion"
 	params:
-		vcf="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf"
+		vcf="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf",
+		psrecord = "log/{run_name}/psrecord/refvcf_per_assay/refvcf_per_assay.{sample}.log"
 	output:
 		vcf="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz",
 		tbi="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz.tbi"
 	shell:
-		"bcftools view {input.vcfgz} -R {input.keep_maps} -S {input.keep_ids} --force-samples -O z -o {output.vcf}; tabix {output.vcf}"
+		"""
+		module load bcftools
+		psrecord "bcftools view {input.vcfgz} -R {input.keep_maps} -S {input.keep_ids} --force-samples -O z -o {output.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
+		"""
 
 rule mm4_convert:
 	input:
@@ -100,11 +118,14 @@ rule mm4_convert:
 		tbi="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz.tbi"
 	params:
 		oprefix="imputation_runs/{run_name}/reference/{sample}.chr{chr}",
-		chrom="{chr}"
+		chrom="{chr}",
+		psrecord = "log/{run_name}/psrecord/mm4_convert/mm4_convert.{sample}.log"
 	output:
 		hd="imputation_runs/{run_name}/reference/{sample}.chr{chr}.m3vcf.gz"
 	shell:
-		"Minimac3-omp --refHaps {input.vcf} --processReference --cpu 5 --myChromosome {params.chrom} --prefix {params.oprefix}"
+		"""
+		psrecord "/home/tnr343/Minimac3/bin/Minimac3-omp --refHaps {input.vcf} --processReference --cpu 5 --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+		"""
 
 rule refcreation_hd:
 	input:
@@ -120,13 +141,16 @@ rule refcreation_hd:
 	params:
 		hdimputedprefix="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}",
 		f250imputedprefix="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}",
-		chrom ="{chr}"
+		chrom ="{chr}",
+		psrecord = "log/{run_name}/psrecord/refcreation_hd/refcreation_hd.{sample}.log"
 	output:
 		hdimputed="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}.dose.vcf.gz",
 		sorted="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}.vcf.gz",
 		hdimputedtbi="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}.vcf.gz.tbi"
 	shell:
-		"minimac4 --refHaps {input.f250} --haps {input.hd} --myChromosome {params.chrom} --format GT --cpu 5 --allTypedSites --prefix {params.hdimputedprefix}; bcftools sort {output.hdimputed} -O z -o {output.sorted};tabix {output.sorted}"
+		"""
+		psrecord "/home/tnr343/Minimac4/release-build/minimac4 --refHaps {input.f250} --haps {input.hd} --myChromosome {params.chrom} --format GT --cpu 5 --allTypedSites --prefix {params.hdimputedprefix}; bcftools sort {output.hdimputed} -O z -o {output.sorted};tabix {output.sorted}" --log {params.psrecord} --include-children --interval 5
+		"""
 
 rule refcreation_f250:
 	input:
@@ -142,14 +166,16 @@ rule refcreation_f250:
 	params:
 		hdimputedprefix="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}",
 		f250imputedprefix="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}",
-		chrom ="{chr}"
+		chrom ="{chr}",
+		psrecord = "log/{run_name}/psrecord/refcreation_f250/refcreation_f250.{sample}.log"
 	output:
 		f250imputed="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.dose.vcf.gz",
 		sorted="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz",
 		f250imputedtabix="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz.tbi"
-
 	shell:
-		"minimac4 --refHaps {input.hd} --haps {input.f250} --myChromosome {params.chrom} --format GT --cpu 5 --allTypedSites --prefix {params.f250imputedprefix}; bcftools sort {output.f250imputed} -O z -o {output.sorted}; tabix {output.sorted}"
+		"""
+		psrecord "/home/tnr343/Minimac4/release-build/minimac4 --refHaps {input.hd} --haps {input.f250} --myChromosome {params.chrom} --format GT --cpu 5 --allTypedSites --prefix {params.f250imputedprefix}; bcftools sort {output.f250imputed} -O z -o {output.sorted}; tabix {output.sorted}" --log {params.psrecord} --include-children --interval 5
+		"""
 
 rule combinerefs:
 	input:
@@ -157,20 +183,26 @@ rule combinerefs:
 		f250imputed="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz"
 	params:
 		chrom="{chr}",
-		oprefix="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}"
+		oprefix="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}",
+		psrecord = "log/{run_name}/psrecord/combinerefs/combinerefs.{sample}.log"
 	output:
 		ref="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
 		reftbi="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
 	shell:
-		"vcf-merge {input.hdimputed} {input.f250imputed} | bgzip -c > {output.ref}; tabix {output.ref}"
+		"""
+		module load vcftools
+		psrecord "vcf-merge {input.hdimputed} {input.f250imputed} | bgzip -c > {output.ref}; tabix {output.ref}"--log {params.psrecord} --include-children --interval 5
+		"""
 
 rule reformat_refs:
 	input:
 		ref="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
 		reftbi="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
 	params:
-
+		psrecord = "log/{run_name}/psrecord/reformat_refs/reformat_refs.{sample}.log"
 	output:
 		refm3vcf="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz"
 	shell:
-		"Minimac3-omp --refHaps {output.ref} --processReference --myChromosome {params.chrom} --prefix {params.oprefix}"
+		"""
+		psrecord "/home/tnr343/Minimac3/bin/Minimac3-omp --refHaps {output.ref} --processReference --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+		"""
