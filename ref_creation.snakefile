@@ -108,8 +108,10 @@ rule fix_alleles:
 
 rule refvcf_per_assay: #filter the vcfs on a per assay basis
 	input:
-		vcfgz="eagle_merged/{run_name}/bigref.chr{chr}.phased.fixed.vcf.gz",
-		index="eagle_merged/{run_name}/bigref.chr{chr}.phased.fixed.vcf.gz.tbi",
+		# vcfgz="eagle_merged/{run_name}/bigref.chr{chr}.phased.fixed.vcf.gz",
+		# index="eagle_merged/{run_name}/bigref.chr{chr}.phased.fixed.vcf.gz.tbi",
+		vcfgz="eagle_merged/{run_name}/bigref.chr{chr}.phased.vcf.gz",
+		index="eagle_merged/{run_name}/bigref.chr{chr}.phased.vcf.gz.tbi",
 		keep_ids = "phasing_extract_lists/{run_name}/{sample}.chr{chr}.keepvcf", #This iteration of the pipeline is only for testing Minimac's imputation accuracy
 		#keep_ids = "extract_lists/{run_name}/{sample}.chr{chr}.keepvcf",
 		keep_maps = "phasing_extract_lists/{run_name}/{sample}.chr{chr}.vcfregion"

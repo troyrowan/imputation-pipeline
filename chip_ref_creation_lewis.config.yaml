@@ -12,6 +12,12 @@ f250ref: "227234.180808.1900.A"
 
 run_name: "200701_testrun"
 
+ind_callrate_filter: 0.1
+
+snp_callrate_filter: 0.1
+
+hwe_filter: 1e-50
+
 plink_threads: 4
 
 plink_mem: 2000
