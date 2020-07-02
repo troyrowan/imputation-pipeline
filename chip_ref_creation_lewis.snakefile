@@ -1,3 +1,5 @@
+include: "chip_qc_lewis.snakefile"
+
 import os
 # Make log directories if they don't exist
 for x in expand("log/{run_name}/slurm_out/{rule}", run_name = config['run_name'], rule = config['rules']):
@@ -11,7 +13,6 @@ rule targ:
 		ref=expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz", run_name=config["run_name"], chr=list(range(1,30)))
 	shell:
 		"rm .snakemake/*_tracking/*"
-include: "qc.snakefile"
 
 #This rule will create single-chromosome vcf files of the reference
 rule recode_vcf:
