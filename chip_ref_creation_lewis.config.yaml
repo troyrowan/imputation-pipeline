@@ -1,0 +1,31 @@
+rules: ["ref_alt", "no_duplicates", "variant_stats", "filter_variants", "individual_stats", "filter_individuals", "hwe_stats", "filter_hwe_variants", "filter_logging", "merge_assays", "recode_vcf", "eagle_merged", "make_phasing_vcf_extract_lists", "refvcf_per_assay", "mm4_convert", "refcreation_hd", "refcreation_f250", "combinerefs", "reformat_refs"]
+
+gt_path: "/storage/hpc/group/UMAG/WORKING/tnr343/imputation/chip_imputation/test_raw_data/"
+
+sample: ["777962.180808.253.A", "227234.180808.1900.A"]
+
+ref_assays: ["777962.180808.253.A", "227234.180808.1900.A"]
+
+hdref: 777962.180808.253.A
+
+f250ref: "227234.180808.1900.A"
+
+run_name: "200701_testrun"
+
+plink_threads: 4
+
+plink_mem: 2000
+
+eagle_threads: 16
+
+eagle_mem:
+
+mm_threads: 8
+
+mm_mem:
+
+mapdict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.map","30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.map", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.map", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.map"}
+
+refdict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.REF", "30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.REF", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.REF", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.map"}
+
+refalleledict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.REF_ALLELE", "30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.REF_ALLELE", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.REF_ALLELE", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.map"}
