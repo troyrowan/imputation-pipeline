@@ -11,9 +11,11 @@ for x in expand("log/{run_name}/psrecord/{rule}", run_name = config['run_name'],
 
 rule targ:
 	input:
-		targ=lambda wildcards: expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
+		targ=lambda wildcards: expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz",
 		run_name=config["run_name"],
 		chr=list(range(1,32)))
+
+		#"imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz"
 		#refs=expand("reference/{run_name}/{sample}.chr{chr}.vcf.gz.tbi", sample=config["sample"], date=config["date"], chr=list(range(1,30)))
 		# ref=expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
 		# run_name=config["run_name"],
@@ -201,9 +203,8 @@ rule combinerefs:
 		reftbi="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
 	shell:
 		"""
-		module load vcftools
 		module load bcftools
-		psrecord "vcf-merge {input.hdimputed} {input.f250imputed} | bgzip -c > {output.ref}; tabix {output.ref}" --log {params.psrecord} --include-children --interval 5
+		psrecord "bcftools merge {input.hdimputed} {input.f250imputed} -O z -o {output.ref}; tabix {output.ref}" --log {params.psrecord} --include-children --interval 5
 		"""
 
 rule reformat_refs:
@@ -211,10 +212,12 @@ rule reformat_refs:
 		ref="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
 		reftbi="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
 	params:
-		psrecord = "log/{run_name}/psrecord/reformat_refs/reformat_refs.chr{chr}.log"
+		psrecord = "log/{run_name}/psrecord/reformat_refs/reformat_refs.chr{chr}.log",
+		chrom = "{chr}",
+		oprefix="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}"
 	output:
 		refm3vcf="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz"
 	shell:
 		"""
-		psrecord "/home/tnr343/Minimac3/bin/Minimac3-omp --refHaps {output.ref} --processReference --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+		psrecord "/home/tnr343/Minimac3/bin/Minimac3-omp --refHaps {input.ref} --processReference --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
