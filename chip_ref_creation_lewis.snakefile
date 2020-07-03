@@ -10,7 +10,7 @@ for x in expand("log/{run_name}/psrecord/{rule}", run_name = config['run_name'],
 rule targ:
 	input:
 		#refs=expand("reference/{run_name}/{sample}.chr{chr}.vcf.gz.tbi", sample=config["sample"], date=config["date"], chr=list(range(1,30)))
-		ref=expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz", run_name=config["run_name"], chr=list(range(1,30)))
+		ref=expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz", run_name=config["run_name"], chr=list(range(1,32)))
 	shell:
 		"rm .snakemake/*_tracking/*"
 
@@ -28,13 +28,12 @@ rule recode_vcf:
 		vcf="imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf",
 		threads=config["plink_threads"],
 		mem=config["plink_mem"],
-		psrecord = "log/{run_name}/psrecord/recode_vcf/recode_vcf.{sample}.log"
+		psrecord = "log/{run_name}/psrecord/recode_vcf/recode_vcf.log"
 	output:
 		vcf=temp("imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf.gz"),
 		tabix=temp("imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf.gz.tbi"),
 	shell:
 		#This step is an issue in within-breed situatoins. Not sure why the --maf works for bigref and not for within breed, but leads to there being SNPs that are actually fixed, but are guessed to have an 01 genotype in eagle (and thus what is actually T . can't handle knowing that there is a 01)
-
 		"""
 		module load plink
 		module load bcftools
@@ -50,7 +49,7 @@ rule eagle_merged:
 		iprefix="imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.merged",
 		out="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased",
 		threads=config["eagle_threads"],
-		psrecord = "log/{run_name}/psrecord/eagle_merged/eagle_merged.{sample}.log"
+		psrecord = "log/{run_name}/psrecord/eagle_merged/eagle_merged.chr{chr}.log"
 	output:
 		vcf="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz",
 		tabix="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz.tbi"
@@ -98,7 +97,7 @@ rule refvcf_per_assay: #filter the vcfs on a per assay basis
 		keep_maps="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcfregion"
 	params:
 		vcf="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf",
-		psrecord = "log/{run_name}/psrecord/refvcf_per_assay/refvcf_per_assay.{sample}.log"
+		psrecord = "log/{run_name}/psrecord/refvcf_per_assay/refvcf_per_assay.{sample}.chr{chr}.log"
 	output:
 		vcf="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz",
 		tbi="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz.tbi"
@@ -119,7 +118,7 @@ rule mm4_convert:
 	params:
 		oprefix="imputation_runs/{run_name}/reference/{sample}.chr{chr}",
 		chrom="{chr}",
-		psrecord = "log/{run_name}/psrecord/mm4_convert/mm4_convert.{sample}.log"
+		psrecord = "log/{run_name}/psrecord/mm4_convert/mm4_convert.{sample}.chr{chr}.log"
 	output:
 		hd="imputation_runs/{run_name}/reference/{sample}.chr{chr}.m3vcf.gz"
 	shell:
@@ -142,14 +141,16 @@ rule refcreation_hd:
 		hdimputedprefix="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}",
 		f250imputedprefix="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}",
 		chrom ="{chr}",
-		psrecord = "log/{run_name}/psrecord/refcreation_hd/refcreation_hd.{sample}.log"
+		threads=config["mm_threads"],
+		psrecord = "log/{run_name}/psrecord/refcreation_hd/refcreation_hd.chr{chr}.log"
 	output:
 		hdimputed="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}.dose.vcf.gz",
 		sorted="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}.vcf.gz",
 		hdimputedtbi="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}.vcf.gz.tbi"
 	shell:
 		"""
-		psrecord "/home/tnr343/Minimac4/release-build/minimac4 --refHaps {input.f250} --haps {input.hd} --myChromosome {params.chrom} --format GT --cpu 5 --allTypedSites --prefix {params.hdimputedprefix}; bcftools sort {output.hdimputed} -O z -o {output.sorted};tabix {output.sorted}" --log {params.psrecord} --include-children --interval 5
+		module load bcftools
+		psrecord "/home/tnr343/Minimac4/release-build/minimac4 --refHaps {input.f250} --haps {input.hd} --myChromosome {params.chrom} --format GT --cpu {params.threads} --allTypedSites --prefix {params.hdimputedprefix}; bcftools sort {output.hdimputed} -O z -o {output.sorted};tabix {output.sorted}" --log {params.psrecord} --include-children --interval 5
 		"""
 
 rule refcreation_f250:
@@ -167,14 +168,16 @@ rule refcreation_f250:
 		hdimputedprefix="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}",
 		f250imputedprefix="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}",
 		chrom ="{chr}",
-		psrecord = "log/{run_name}/psrecord/refcreation_f250/refcreation_f250.{sample}.log"
+		threads=config["mm_threads"],
+		psrecord = "log/{run_name}/psrecord/refcreation_f250/refcreation_f250.chr{chr}.log"
 	output:
 		f250imputed="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.dose.vcf.gz",
 		sorted="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz",
 		f250imputedtabix="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz.tbi"
 	shell:
 		"""
-		psrecord "/home/tnr343/Minimac4/release-build/minimac4 --refHaps {input.hd} --haps {input.f250} --myChromosome {params.chrom} --format GT --cpu 5 --allTypedSites --prefix {params.f250imputedprefix}; bcftools sort {output.f250imputed} -O z -o {output.sorted}; tabix {output.sorted}" --log {params.psrecord} --include-children --interval 5
+		module load bcftools
+		psrecord "/home/tnr343/Minimac4/release-build/minimac4 --refHaps {input.hd} --haps {input.f250} --myChromosome {params.chrom} --format GT --cpu {params.threads} --allTypedSites --prefix {params.f250imputedprefix}; bcftools sort {output.f250imputed} -O z -o {output.sorted}; tabix {output.sorted}" --log {params.psrecord} --include-children --interval 5
 		"""
 
 rule combinerefs:
@@ -184,14 +187,15 @@ rule combinerefs:
 	params:
 		chrom="{chr}",
 		oprefix="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}",
-		psrecord = "log/{run_name}/psrecord/combinerefs/combinerefs.{sample}.log"
+		psrecord = "log/{run_name}/psrecord/combinerefs/combinerefs.bigref.850k.chr{chr}.log"
 	output:
 		ref="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
 		reftbi="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
 	shell:
 		"""
 		module load vcftools
-		psrecord "vcf-merge {input.hdimputed} {input.f250imputed} | bgzip -c > {output.ref}; tabix {output.ref}"--log {params.psrecord} --include-children --interval 5
+		module load bcftools
+		psrecord "vcf-merge {input.hdimputed} {input.f250imputed} | bgzip -c > {output.ref}; tabix {output.ref}" --log {params.psrecord} --include-children --interval 5
 		"""
 
 rule reformat_refs:
@@ -199,7 +203,7 @@ rule reformat_refs:
 		ref="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
 		reftbi="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
 	params:
-		psrecord = "log/{run_name}/psrecord/reformat_refs/reformat_refs.{sample}.log"
+		psrecord = "log/{run_name}/psrecord/reformat_refs/reformat_refs.chr{chr}.log"
 	output:
 		refm3vcf="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz"
 	shell:
