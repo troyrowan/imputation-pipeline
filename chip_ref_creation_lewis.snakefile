@@ -1,4 +1,4 @@
-include: "chip_qc_lewis.snakefile"
+#include: "chip_qc_lewis.snakefile"
 
 import os
 # Make log directories if they don't exist
@@ -11,10 +11,13 @@ for x in expand("log/{run_name}/psrecord/{rule}", run_name = config['run_name'],
 
 rule targ:
 	input:
-		#refs=expand("reference/{run_name}/{sample}.chr{chr}.vcf.gz.tbi", sample=config["sample"], date=config["date"], chr=list(range(1,30)))
-		ref=expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
+		targ=lambda wildcards: expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
 		run_name=config["run_name"],
 		chr=list(range(1,32)))
+		#refs=expand("reference/{run_name}/{sample}.chr{chr}.vcf.gz.tbi", sample=config["sample"], date=config["date"], chr=list(range(1,30)))
+		# ref=expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
+		# run_name=config["run_name"],
+		# chr=list(range(1,32)))
 	shell:
 		"rm .snakemake/*_tracking/*"
 
@@ -50,7 +53,6 @@ rule eagle_merged:
 		vcf="imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf.gz",
 		map="genetic_map_1cMperMb.txt" #Map should be changed
 	params:
-		iprefix="imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.merged",
 		out="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased",
 		threads=config["eagle_threads"],
 		psrecord = "log/{run_name}/psrecord/eagle_merged/eagle_merged.chr{chr}.log"
@@ -63,21 +65,21 @@ rule eagle_merged:
 		psrecord " ~/Eagle_v2.4.1/eagle --vcf {input.vcf} --geneticMapFile {input.map} --numThreads {params.threads} --chromX 32 --outPrefix {params.out}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
 		"""
 
-rule make_phasing_vcf_extract_lists:
-	input:
-		# bim=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.bim", sample=config["ref_assays"]),
-		# fam=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.fam", sample=config["ref_assays"])
-		bim="imputation_runs/{run_name}/hwe_filtered/{sample}.bim",
-		fam="imputation_runs/{run_name}/hwe_filtered/{sample}.fam"
-	params:
-		psrecord = "log/{run_name}/psrecord/make_phasing_vcf_extract_lists/make_phasing_vcf_extract_lists.{sample}.log"
-	output:
-		keep_ids="imputation_runs/{run_name}/vcf_per_assay/{sample}.keepvcf",
-		keep_snps="imputation_runs/{run_name}/vcf_per_assay/{sample}.vcfregion"
-	shell:
-		"""
-		psrecord "python bin/vcf_extraction_maker.py {input.bim} {input.fam} {output.keep_snps} {output.keep_ids}" --log {params.psrecord} --include-children --interval 5
-		"""
+# rule make_phasing_vcf_extract_lists:
+# 	input:
+# 		bim=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.bim", sample=config["ref_assays"]),
+# 		fam=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.fam", sample=config["ref_assays"])
+# 	params:
+# 		psrecord = "log/{run_name}/psrecord/make_phasing_vcf_extract_lists/make_phasing_vcf_extract_lists.{sample}.log",
+# 		bim="imputation_runs/{run_name}/hwe_filtered/{sample}.bim",
+# 		fam="imputation_runs/{run_name}/hwe_filtered/{sample}.fam"
+# 	output:
+# 		keep_ids="imputation_runs/{run_name}/vcf_per_assay/{sample}.keepvcf",
+# 		keep_snps="imputation_runs/{run_name}/vcf_per_assay/{sample}.vcfregion"
+# 	shell:
+# 		"""
+# 		psrecord "python bin/vcf_extraction_maker.py {params.bim} {params.fam} {output.keep_snps} {output.keep_ids}" --log {params.psrecord} --include-children --interval 5
+# 		"""
 
 # rule fix_alleles:
 # 	input:
@@ -100,7 +102,7 @@ rule refvcf_per_assay: #filter the vcfs on a per assay basis
 		index="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz.tbi",
 		keep_ids="imputation_runs/{run_name}/vcf_per_assay/{sample}.keepvcf", #This iteration of the pipeline is only for testing Minimac's imputation accuracy
 		#keep_ids="extract_lists/{run_name}/{sample}.chr{chr}.keepvcf",
-		keep_maps="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcfregion"
+		keep_maps="imputation_runs/{run_name}/vcf_per_assay/{sample}.vcfregion"
 	params:
 		vcf="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf",
 		psrecord = "log/{run_name}/psrecord/refvcf_per_assay/refvcf_per_assay.{sample}.chr{chr}.log"
@@ -134,7 +136,7 @@ rule mm4_convert:
 
 rule refcreation_hd:
 	input:
-		f250=expand("imputation_runs/{run_name}/imputation_runs/{run_name}/reference/{sample}.chr{{chr}}.m3vcf.gz",
+		f250=expand("imputation_runs/{run_name}/reference/{sample}.chr{{chr}}.m3vcf.gz",
 		run_name=config["run_name"],
 		sample=config["f250ref"]),
 		hd=expand("imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{{chr}}.vcf.gz",

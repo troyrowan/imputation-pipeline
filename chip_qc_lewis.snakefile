@@ -8,8 +8,11 @@ for x in expand("log/{run_name}/psrecord/{rule}", run_name = config['run_name'],
 #Generates a single merged file with all filtering
 rule filter_target:
 	input:
-		hwe = expand("imputation_runs/{run_name}/merged_files/{run_name}.bed",
-		run_name = config["run_name"])
+		hwe=expand("imputation_runs/{run_name}/merged_files/{run_name}.bed",
+		run_name = config["run_name"]),
+		vcf=expand("imputation_runs/{run_name}/vcf_per_assay/{sample}.vcfregion",
+		run_name=config["run_name"],
+		sample=config["sample"])
 	# prarms:
 	# 	nosex = "imputation_runs/{run_name}/*/*nosex",
 	# 	hh = "imputation_runs/{run_name}/*/*hh" #cleaning up automatically generated, no-information PLINK files.
@@ -364,4 +367,20 @@ rule merge_assays:
 		"""
 		module load plink
 		psrecord "python bin/file_list_maker.py {params.pfiles} {output.mergefilelist}; plink --merge-list {output.mergefilelist} --cow --merge-equal-pos --real-ref-alleles --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+		"""
+
+rule make_phasing_vcf_extract_lists:
+	input:
+		bim=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.bim", sample=config["ref_assays"]),
+		fam=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.fam", sample=config["ref_assays"])
+	params:
+		psrecord = "log/{run_name}/psrecord/make_phasing_vcf_extract_lists/make_phasing_vcf_extract_lists.{sample}.log",
+		bim="imputation_runs/{run_name}/hwe_filtered/{sample}.bim",
+		fam="imputation_runs/{run_name}/hwe_filtered/{sample}.fam"
+	output:
+		keep_ids="imputation_runs/{run_name}/vcf_per_assay/{sample}.keepvcf",
+		keep_snps="imputation_runs/{run_name}/vcf_per_assay/{sample}.vcfregion"
+	shell:
+		"""
+		psrecord "python bin/vcf_extraction_maker.py {params.bim} {params.fam} {output.keep_snps} {output.keep_ids}" --log {params.psrecord} --include-children --interval 5
 		"""

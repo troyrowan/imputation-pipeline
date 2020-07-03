@@ -1,4 +1,4 @@
-rules: ["ref_alt", "no_duplicates", "variant_stats", "filter_variants", "individual_stats", "filter_individuals", "hwe_stats", "filter_hwe_variants", "filter_logging", "merge_assays"]
+rules: ["ref_alt", "no_duplicates", "variant_stats", "filter_variants", "individual_stats", "filter_individuals", "hwe_stats", "filter_hwe_variants", "filter_logging", "merge_assays", "make_phasing_vcf_extract_lists"]
 
 sample: ["26504.180808.1277.A", "26504.180808.6157.F", "30105.180808.2990.D", "30105.180808.3934.C"]
 
