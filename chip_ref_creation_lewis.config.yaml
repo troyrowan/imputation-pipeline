@@ -10,7 +10,7 @@ hdref: 777962.180808.253.A
 
 f250ref: "227234.180808.1900.A"
 
-run_name: "200701_testrun"
+run_name: "200703_test_refbuild"
 
 ind_callrate_filter: 0.1
 
@@ -24,14 +24,10 @@ plink_mem: 2000
 
 eagle_threads: 16
 
-eagle_mem:
-
 mm_threads: 8
-
-mm_mem:
 
 mapdict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.map","30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.map", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.map", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.map"}
 
-refdict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.REF", "30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.REF", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.REF", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.map"}
+refdict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.REF", "30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.REF", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.REF", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.REF"}
 
-refalleledict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.REF_ALLELE", "30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.REF_ALLELE", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.REF_ALLELE", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.map"}
+refalleledict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.REF_ALLELE", "30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.REF_ALLELE", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.REF_ALLELE", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.REF_ALLELE"}
