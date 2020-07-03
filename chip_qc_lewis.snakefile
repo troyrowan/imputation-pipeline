@@ -54,7 +54,7 @@ rule ref_alt:
 		fam = "imputation_runs/{run_name}/ref_alt/{sample}.fam"
 	shell:
 		"""
-		modlue load plink
+		module load plink
 		psrecord "plink --ped {input.ped} --map {input.map} --cow --update-alleles {input.ref} --not-chr 0 --a1-allele {input.allele} --threads {params.threads} --memory {params.mem} --make-bed --real-ref-alleles --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
 
@@ -77,7 +77,7 @@ rule no_duplicates:
 		fam = "imputation_runs/{run_name}/no_duplicates/{sample}.fam"
 	shell:
  		"""
-		modlue load plink
+		module load plink
 		psrecord "plink --bfile {params.inprefix} --bmerge {params.inprefix} --cow --threads {params.threads} --memory {params.mem} --real-ref-alleles --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
 #Calculates per-variant call rate
@@ -98,7 +98,7 @@ rule variant_stats:
 		#png = "snp_stats/figures/{sample}.snp_call_rate.png"
 	shell:
 		"""
-		modlue load plink
+		module load plink
 		psrecord "plink --bfile {params.inprefix} --cow --threads {params.threads} --memory {params.mem} --real-ref-alleles --nonfounders --freq --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
 		# "(plink --bfile {params.inprefix} --cow --memoryory 500 --real-ref-alleles --nonfounders --freq --out {params.oprefix}; python bin/snp_call_rate_visualization.py {output.frq} {output.png}) > {log}"
@@ -132,7 +132,7 @@ rule filter_variants:
 		log="imputation_runs/{run_name}/snp_filtered/{sample}.log"
 	shell:
 		"""
-		modlue load plink
+		module load plink
 		psrecord "plink --bfile {params.inprefix} --cow --threads {params.threads} --memory {params.mem} --real-ref-alleles --nonfounders --not-chr 0 --geno {params.filter} --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
 
@@ -158,7 +158,7 @@ rule individual_stats: #This step is performed on variant-filtered files
 		#png="individual_stats/figures/{sample}.individual_call_rate.png"
 	shell:
 		"""
-		modlue load plink
+		module load plink
 		psrecord "plink --bfile {params.inprefix} --cow --threads {params.threads} --memory {params.mem} --real-ref-alleles --missing --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
 
@@ -187,7 +187,7 @@ rule filter_individuals:
 
 	shell: #Filter is set at 0.1 missing as a threshold for being dropped from the dataset
 		"""
-		modlue load plink
+		module load plink
 		psrecord "plink --bfile {params.inprefix} --cow --threads {params.threads} --memory {params.mem} --real-ref-alleles --mind {params.filter}  --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
 		#; python bin/individual_filtered_log_parsing.py {output.log} {params.csv}"
@@ -211,7 +211,7 @@ rule hwe_stats:
 		#png="hwe_stats/figures/{sample}.hwe_pvalues.png"
 	shell:
 		"""
-		modlue load plink
+		module load plink
 		psrecord "plink --bfile {params.inprefix} --cow --threads {params.threads} --memory {params.mem} --real-ref-alleles --nonfounders --hardy --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
 		# "plink --bfile {params.inprefix} --cow --memoryory 500 --real-ref-alleles --nonfounders --hardy --out {params.oprefix}; python bin/hwe_visualization.py {output.hwe} {output.png}"
@@ -238,7 +238,7 @@ rule filter_hwe_variants:
 		log="imputation_runs/{run_name}/hwe_filtered/{sample}.log"
 	shell:
 		"""
-		modlue load plink
+		module load plink
 		psrecord "plink --bfile {params.inprefix} --cow --threads {params.threads} --memory {params.mem} --real-ref-alleles --nonfounders --hwe 1e-50 --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
 
@@ -310,7 +310,7 @@ rule filter_logging:
 		log = "imputation_runs/{run_name}/filter_logs/{run_name}_filtering_report.txt"
 	shell:
 		"""
-		modlue load plink
+		module load plink
 		psrecord "python bin/combined_filter_logging.py {params.prefix} > {output.log}" --log {params.psrecord} --include-children --interval 5
 		"""
 #Filtering report will be in the following format:
@@ -362,6 +362,6 @@ rule merge_assays:
 		bed = "imputation_runs/{run_name}/merged_files/{run_name}.bed"
 	shell: #This list maker creates a list of all assays being imputed. This is given to PLINK's "--merge-list" command
 		"""
-		modlue load plink
+		module load plink
 		psrecord "python bin/file_list_maker.py {params.pfiles} {output.mergefilelist}; plink --merge-list {output.mergefilelist} --cow --merge-equal-pos --real-ref-alleles --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
