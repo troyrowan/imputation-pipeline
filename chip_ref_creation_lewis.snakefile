@@ -1,4 +1,4 @@
-#include: "chip_qc_lewis.snakefile"
+include: "chip_qc_lewis.snakefile"
 
 import os
 # Make log directories if they don't exist
@@ -124,11 +124,13 @@ rule mm4_convert:
 		#vcf="phased_refs/{run_name}/{sample}.chr{chr}.vcf.gz",
 		#tbi="phased_refs/{run_name}/{sample}.chr{chr}vcf.gz.tbi"
 		vcf="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz",
-		tbi="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz.tbi"
+		tbi="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz.tbi",
 	params:
 		oprefix="imputation_runs/{run_name}/reference/{sample}.chr{chr}",
 		chrom="{chr}",
 		psrecord = "log/{run_name}/psrecord/mm4_convert/mm4_convert.{sample}.chr{chr}.log"
+	wildcard_constraints:
+		sample=config["sample"]
 	output:
 		hd="imputation_runs/{run_name}/reference/{sample}.chr{chr}.m3vcf.gz"
 	shell:
