@@ -1,0 +1,64 @@
+{
+    "__default__":
+    {
+        "p" : "General,Lewis,BioCompute,htc4,hpc5",
+        "account" : "animalsci",
+        "mem" : 2G,
+        "c": 1,
+        "t": "0:05:00",
+        "o": "log/{wildcards.run_name}/slurm_out/{rule}/{wildcards}.%j.out"
+    },
+    "filter_logging":
+    {
+        "c" : 1,
+        "mem" : 1G,
+        "t": "0:10:00"
+    },
+    "merge_assays":
+    {
+        "mem" : 10G,
+        "t" : "1:00:00"
+    },
+    "eagle_merged":
+    {
+        "c" : 16,
+        "mem" : 24G,
+        "t": "15:00:00"
+    },
+    "refvcf_per_assay":
+    {
+        "c" : 1,
+        "mem" : 5G,
+        "t": "2:00:00"
+    },
+    "mm4_convert":
+    {
+        "c" : 5,
+        "mem" : 10G,
+        "t": "5:00:00"
+    },
+    "refcreation_hd":
+    {
+        "c" : 8,
+        "mem" : 24G,
+        "t": "15:00:00"
+    },
+    "refcreation_f250":
+    {
+        "c" : 8,
+        "mem" : 24G,
+        "t": "15:00:00"
+    },
+    "combinerefs":
+    {
+        "c" : 1,
+        "mem" : 10G,
+        "t": "5:00:00"
+    },
+    "reformat_refs":
+    {
+        "c" : 5,
+        "mem" : 10G,
+        "t": "10:00:00"
+    }
+}
