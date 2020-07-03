@@ -7,10 +7,14 @@ for x in expand("log/{run_name}/slurm_out/{rule}", run_name = config['run_name']
 for x in expand("log/{run_name}/psrecord/{rule}", run_name = config['run_name'], rule = config['rules']):
 	os.makedirs(x, exist_ok = True)
 
+#snakemake -s chip_ref_creation_lewis.snakefile --jobs 1000 --rerun-incomplete --keep-going --latency-wait 30 --configfile chip_ref_creation_lewis.config.yaml --cluster-config chip_ref_creation_lewis.cluster.json --cluster "sbatch -p {cluster.p} -o {cluster.o} --account {cluster.account} -t {cluster.t} -c {cluster.c} --mem {cluster.mem} --account {cluster.account}" -np
+
 rule targ:
 	input:
 		#refs=expand("reference/{run_name}/{sample}.chr{chr}.vcf.gz.tbi", sample=config["sample"], date=config["date"], chr=list(range(1,30)))
-		ref=expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz", run_name=config["run_name"], chr=list(range(1,32)))
+		ref=expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
+		run_name=config["run_name"],
+		chr=list(range(1,32)))
 	shell:
 		"rm .snakemake/*_tracking/*"
 
@@ -40,7 +44,7 @@ rule recode_vcf:
 		psrecord "plink --bfile {params.inprefix} --nonfounders --chr {params.chrom} --cow --memory {params.mem} --threads {params.threads} --real-ref-alleles --recode vcf --maf 0.0000001 --out {params.oprefix}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
 		"""
 		#"(plink --bfile {params.inprefix} --nonfounders --chr {params.chrom} --chr-set 33 --memory 500 --maf 0.0001 --real-ref-alleles --make-bed --out {params.oprefix}) > {log}"
-
+#Memory requirements from Eagle 2.4.1 documentation: When phasing without a reference panel, Eagle’s memory use scales linearly with the number of samples (N) and the number of SNPs (M). For our tests on N=150K UK Biobank samples, Eagle required ≈1 GB RAM per 1,000 SNPs.
 rule eagle_merged:
 	input:
 		vcf="imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf.gz",
@@ -61,8 +65,10 @@ rule eagle_merged:
 
 rule make_phasing_vcf_extract_lists:
 	input:
-		bim=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.bim", sample=config["ref_assays"]),
-		fam=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.fam", sample=config["ref_assays"])
+		# bim=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.bim", sample=config["ref_assays"]),
+		# fam=expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.fam", sample=config["ref_assays"])
+		bim="imputation_runs/{run_name}/hwe_filtered/{sample}.bim",
+		fam="imputation_runs/{run_name}/hwe_filtered/{sample}.fam"
 	params:
 		psrecord = "log/{run_name}/psrecord/make_phasing_vcf_extract_lists/make_phasing_vcf_extract_lists.{sample}.log"
 	output:
