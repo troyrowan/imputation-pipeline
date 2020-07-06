@@ -1,0 +1,33 @@
+rules: ["ref_alt", "no_duplicates", "variant_stats", "filter_variants", "individual_stats", "filter_individuals", "hwe_stats", "filter_hwe_variants", "filter_logging", "merge_assays", "assay_chrsplit", "bigref_phasing", "imputation", "order_vcfs", "hardcall_vcf", "concat_hardcall_vcf", "concat_vcf"]
+
+sample: ["26504.180808.1277.A", "26504.180808.6157.F", "30105.180808.2990.D", "30105.180808.3934.C"]
+
+gt_path: "/storage/hpc/group/UMAG/WORKING/tnr343/imputation/chip_imputation/test_raw_data/"
+
+run_name: "200701_testrun"
+
+ref_version: "200703_test_refbuild"
+
+hdref: "777962.180808.253.A"
+
+f250ref: "227234.180808.1900.A"
+
+ind_callrate_filter: 0.1
+
+snp_callrate_filter: 0.1
+
+hwe_filter: 1e-50
+
+plink_threads: 4
+
+plink_mem: 2000
+
+eagle_threads: 16
+
+mm_threads: 8
+
+mapdict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.map","30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.map", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.map", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.map"}
+
+refdict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.REF", "30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.REF", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.REF", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.REF"}
+
+refalleledict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_26504_GGPLDV3_snpnumber_180613.REF_ALLELE", "30105":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_30105_GGPLDV4_snpnumber_180613.REF_ALLELE", "227234":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_227234_GGPF250_snpnumber_180613.REF_ALLELE", "777962":"/storage/hpc/group/UMAG/PLINK_FILES/9913_ARS1.2_777962_HD_snpnumber_180613.REF_ALLELE"}
