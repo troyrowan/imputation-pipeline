@@ -1,7 +1,7 @@
 ##include: "bigrefprep.snakefile"
 #include: "190122_refcreation.snakefile"
-include: "chip_qc_lewis.snakefile"
-include: "chip_ref_creation_lewis.snakefile"
+# include: "chip_qc_lewis.snakefile"
+# include: "chip_ref_creation_lewis.snakefile"
 
 #snakemake -s chip_imp_lewis.snakefile --jobs 1000 --rerun-incomplete --keep-going --latency-wait 30 --configfile chip_imp_lewis.config.yaml --cluster-config chip_imp_lewis.cluster.json --cluster "sbatch -p {cluster.p} -o {cluster.o} --account {cluster.account} -t {cluster.t} -c {cluster.c} --mem {cluster.mem} --account {cluster.account}" -np
 
@@ -127,9 +127,8 @@ rule order_vcfs:
 		tabix = temp("imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz.tbi")
 	shell: #shuffle-cols does exactly what we need it to. Then bgzip and tabix output for concatenation with bcftools
 		"""
-		module load vcftools
 		module load bcftools
-		psrecord "vcf-shuffle-cols -t {input.template} {input.vcf} > {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5"""
+		psrecord " ~/vcftools_0.1.13/perl/vcf-shuffle-cols -t {input.template} {input.vcf} > {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5"""
 
 # rule gwas_format: #Have changed this to do the longest step on a single chromosome basis, can't believe it took me this long...
 # 	input:
