@@ -12,31 +12,29 @@ rule imputed_seq:
 
 rule imputation:
 	input:
-		gen = "chip_imputed/{run_name}/{run_name}.chr{chr}.hardcall.vcf.gz",
-		ref = expand("/storage/htc/schnabellab/results/9913/wgs/1kbulls_ars1.2/reference_haps/sequence/{ref_run}.{filter}.chr{{chr}}.m3vcf.gz",
-		ref_run = config["seqref"],
-		filter = config["seqref_filter"])
-	threads: 20
-	# benchmark:
-	# 	"benchmarks/{run_name}/imputation/{run_name}.chr{chr}.benchmark.txt"
+		gen = "imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz",
+		ref = expand("reference_build/{run_name}/reference/{run_name}.{filter}.chr{{chr}}.m3vcf.gz",
+		run_name = config["run_name"],
+		filter = config["tranche"]+"_"+config["allele_count"])
 	params:
-		oprefix = "imputed/{run_name}/{run_name}.chr{chr}",
-		chrom = "{chr}"
+		oprefix = "imputation_runs/{run_name}/seq_imputed/{run_name}/{run_name}.chr{chr}",
+		chrom = "{chr}",
+		threads = config["mm_threads"]
 	output:
-		vcf = "imputed/{run_name}/{run_name}.chr{chr}.dose.vcf.gz"
+		vcf = "imputation_runs/{run_name}/seq_imputed/{run_name}/{run_name}.chr{chr}.dose.vcf.gz"
 	shell:
-		"/storage/hpc/group/UMAG/SCRIPTS/Minimac4-1.0.2/release-build/minimac4 --refHaps {input.ref} --haps {input.gen} --cpus {threads} --myChromosome {params.chrom} --prefix {params.oprefix}"
+		"/storage/hpc/group/UMAG/SCRIPTS/Minimac4-1.0.2/release-build/minimac4 --refHaps {input.ref} --haps {input.gen} --cpus {params.threads} --myChromosome {params.chrom} --prefix {params.oprefix}"
 
 
 rule convert_mach:
 	input:
-		vcf = "imputed/{run_name}/{run_name}.chr{chr}.dose.vcf.gz",
-		info = "imputed/{run_name}/{run_name}.chr{chr}.info"
+		vcf = "imputation_runs/{run_name}/seq_imputed/{run_name}/{run_name}.chr{chr}.dose.vcf.gz",
+		info = "imputation_runs/{run_name}/seq_imputed/{run_name}/{run_name}.chr{chr}.info"
 	params:
 		chrom = "{chr}",
-		oprefix = "imputed/{run_name}/{run_name}.chr{chr}"
+		oprefix = "imputation_runs/{run_name}/imputed/{run_name}/{run_name}.chr{chr}"
 	output:
-		mach = "imputed/{run_name}/{run_name}.chr{chr}.mach.dose.gz",
-		info = "imputed/{run_name}/{run_name}.chr{chr}.mach.info"
+		mach = "imputation_runs/{run_name}/seq_imputed/{run_name}/{run_name}.chr{chr}.mach.dose.gz",
+		info = "imputation_runs/{run_name}/seq_imputed/{run_name}/{run_name}.chr{chr}.mach.info"
 	shell:
 		"/storage/hpc/group/UMAG/SCRIPTS/DosageConvertor/build/DosageConvertor --vcfDose {input.vcf} --info {input.info} --myChromosome {params.chrom} --type mach --format 1 --prefix {params.oprefix}"
