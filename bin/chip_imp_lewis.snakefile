@@ -92,7 +92,7 @@ rule imputation: #A single round of imputation for all target assays.
 		#vcf = "minimac_imputed/combined_imputed/{run_name}.chr{chr}.m3vcf.gz"
 	shell: #Minimac3 appears to be working better, not sure what the hangup with Minimac4 is, but will explore in the near future
 		"""
-		psrecord "~/Minimac4/release-build/minimac4 --refHaps {input.ref} --haps {input.haps} --allTypedSites --myChromosome {params.chrom} --cpu {params.threads} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+		psrecord "/storage/hpc/group/UMAG/SCRIPTS/Minimac4-1.0.2/release-build/minimac4 --refHaps {input.ref} --haps {input.haps} --allTypedSites --myChromosome {params.chrom} --cpu {params.threads} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
 
 # #Minimac's dosage conversion does not work at this point. If it ever does, this'll be the rule that makes it work
