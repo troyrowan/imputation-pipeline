@@ -16,7 +16,7 @@ rule bigref_done: #Last file create is specified up here. Use expand to indicate
 	input:#Standard outputs for the pipeline are a dosage vcf file and a hardcall only vcf file. Have ability to make dosage input for GEMMA and other file types
 		gen = expand("imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz",
 		run_name = config["run_name"],
-		chr = list(range(1,32))),
+		chr = list(range(1,32)))
 		# mgf = expand("imputation_runs/{run_name}/imputed_genotypes/{run_name}.hardcall.vcf.gz",
 		# run_name = config["run_name"])
 		#chroms = expand("{run_name}/imputed_genotypes_single_chrom/{run_name}.chr{chr}.dose.mgf.gz", run_name = config["run_name"], chr = list(range(1,30)))
