@@ -69,5 +69,5 @@ rule convert_mm:
 		"reference_build/{run_name}/reference/{run_name}.{filter}.chr{chr}.m3vcf.gz"
 	shell:
 		"""
-		psrecord "~/Minimac3/bin/ --refHaps {input.vcf} --processReference --cpu {params.threads} --lowMemory --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+		psrecord "/storage/hpc/group/UMAG/SCRIPTS/Minimac3/bin/Minimac3-omp --refHaps {input.vcf} --processReference --cpu {params.threads} --lowMemory --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
