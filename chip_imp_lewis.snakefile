@@ -1,7 +1,7 @@
 ##include: "bigrefprep.snakefile"
 #include: "190122_refcreation.snakefile"
-# include: "chip_qc_lewis.snakefile"
-# include: "chip_ref_creation_lewis.snakefile"
+include: "chip_qc_lewis.snakefile"
+include: "chip_ref_creation_lewis.snakefile"
 
 #snakemake -s chip_imp_lewis.snakefile --jobs 1000 --rerun-incomplete --keep-going --latency-wait 30 --configfile chip_imp_lewis.config.yaml --cluster-config chip_imp_lewis.cluster.json --cluster "sbatch -p {cluster.p} -o {cluster.o} --account {cluster.account} -t {cluster.t} -c {cluster.c} --mem {cluster.mem} --account {cluster.account}" -np
 
@@ -15,7 +15,8 @@ for x in expand("log/{run_name}/psrecord/{rule}", run_name = config['run_name'],
 rule bigref_done: #Last file create is specified up here. Use expand to indicate how we want wild cards filled in.
 	input:#Standard outputs for the pipeline are a dosage vcf file and a hardcall only vcf file. Have ability to make dosage input for GEMMA and other file types
 		gen = expand("imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz",
-		run_name = config["run_name"]),
+		run_name = config["run_name"],
+		chr = list(range(1,32))),
 		# mgf = expand("imputation_runs/{run_name}/imputed_genotypes/{run_name}.hardcall.vcf.gz",
 		# run_name = config["run_name"])
 		#chroms = expand("{run_name}/imputed_genotypes_single_chrom/{run_name}.chr{chr}.dose.mgf.gz", run_name = config["run_name"], chr = list(range(1,30)))
@@ -157,7 +158,7 @@ rule hardcall_vcf:
 
 rule concat_hardcall_vcf:#Puts individual chromosome files back into a single VCF
 	input:
-		concat = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.hardcall.vcf.gz", chr = list(range(1,30)))
+		concat = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.hardcall.vcf.gz", chr = list(range(1,32)))
 	params:
 		psrecord = "log/{run_name}/psrecord/concat_hardcall_vcf/concat_hardcall_vcf.log"
 	output:
@@ -169,8 +170,8 @@ rule concat_hardcall_vcf:#Puts individual chromosome files back into a single VC
 #Use BCFtools to combine individual sorted VCF files
 rule concat_vcf:
 	input:
-		vcf = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.reordered.vcf.gz", chr = list(range(1,31))),
-		tabix = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.reordered.vcf.gz.tbi", chr = list(range(1,31)))
+		vcf = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.reordered.vcf.gz", chr = list(range(1,32))),
+		tabix = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.reordered.vcf.gz.tbi", chr = list(range(1,32)))
 	params:
 		psrecord = "log/{run_name}/psrecord/concat_vcf/concat_vcf.log"
 	output:
