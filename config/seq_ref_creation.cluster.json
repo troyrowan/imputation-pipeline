@@ -1,0 +1,34 @@
+{
+    "__default__":
+    {
+        "p" : "General,Lewis,BioCompute,htc4,hpc5",
+        "account" : "animalsci",
+        "mem" : 2G,
+        "c": 1,
+        "t": "0:05:00",
+        "o": "log/{wildcards.run_name}/slurm_out/{rule}/{wildcards}.%j.out"
+    },
+    "variant_stats":
+    {
+        "c" : 1,
+        "mem" : 100GB,
+        "t": "5:00:00"
+    },
+    "tranche_extract":
+    {
+        "mem" : 10G,
+        "t" : "10:00:00"
+    },
+    "phasing":
+    {
+        "c" : 16,
+        "mem" : 24G,
+        "t": "15:00:00"
+    },
+    "convert_mm":
+    {
+        "c" : 5,
+        "mem" : 10G,
+        "t": "5:00:00"
+    }
+}

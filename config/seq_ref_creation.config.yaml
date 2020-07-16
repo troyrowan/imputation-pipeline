@@ -1,8 +1,8 @@
-rules: ["tranche_extract", "phasing", "convert_mm"]
+rules: ["variant_stats", "tranche_extract", "phasing", "convert_mm"]
 
-1kbulls_dir: "/storage/htc/schnabellab/results/9913/wgs/1kbulls_ars1.2/vcf/190522_Run7_Tau"
+1kbulls_dir: /storage/htc/schnabellab/results/9913/wgs/1kbulls_ars1.2/vcf/200627_Run8_TauInd/
 
-run_name: "200708_Run8"
+run_name: "200708_Run8_refbuild"
 
 eagle_threads: 16
 

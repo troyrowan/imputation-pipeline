@@ -5,15 +5,32 @@ for x in expand("log/{run_name}/slurm_out/{rule}", run_name = config['run_name']
 for x in expand("log/{run_name}/psrecord/{rule}", run_name = config['run_name'], rule = config['rules']):
 	os.makedirs(x, exist_ok = True)
 
-rule run_phasing:
+rule targets:
 	input:
 		#phased = expand("eagle_phased/{run_name}.{filter}.chr{chr}.vcf.gz", run_name = "190805_seqref", filter = "T99", chr = list(range(1,29)))
-		filter = expand("reference_build/{run_name}/reference/{run_name}.{filter}.chr{chr}.m3vcf.gz",
+		info = expand("imputation_runs/{run_name}/{run_name}.chr{chr}.info",
 		run_name = config["run_name"],
-		filter = config["tranche"]+"_"+config["allele_count"],
 		chr = list(range(1,30)) + ["X", "Y"])
+		# filter = expand("reference_build/{run_name}/reference/{run_name}.{filter}.chr{chr}.m3vcf.gz",
+		# run_name = config["run_name"],
+		# filter = config["tranche"]+"_"+config["allele_count"],
+		# chr = list(range(1,30)) + ["X", "Y"])
 	# shell:
 	# 	"rm .snakemake/*_tracking/*"
+
+rule variant_stats:
+	input:
+		vcf = expand("{dir}Chr{{chr}}-Run8-TAUIND-raw-toDistribute.vcf.gz",
+		dir = config["1kbulls_dir"])
+	params:
+		psrecord = "log/{run_name}/psrecord/variant_stats/variant_stats.chr{chr}.log"
+	output:
+		info = "imputation_runs/{run_name}/{run_name}.chr{chr}.info"
+	shell:
+		"""
+		module load bcftools
+		psrecord "bcftools query -f '%CHROM %POS %REF %ALT %AC %AF %AN %DP %ExcessHet %FS %InbreedingCoeff %MLEAC %MLEAF %MQ %QD %SOR %VQSLOD %culprit \n' {input.vcf} > {output.info}" --log {params.psrecord} --interval 5"""
+
 
 rule tranche_extract:
 	input:
