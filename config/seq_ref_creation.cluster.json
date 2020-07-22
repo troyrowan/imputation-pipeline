@@ -11,23 +11,23 @@
     "variant_stats":
     {
         "c" : 1,
-        "mem" : 100GB,
+        "mem" : 10GB,
         "t": "5:00:00"
     },
     "tranche_extract":
     {
-        "mem" : 10G,
+        "mem" : 20G,
         "t" : "10:00:00"
     },
     "phasing":
     {
         "c" : 16,
-        "mem" : 24G,
-        "t": "15:00:00"
+        "mem" : 60G,
+        "t": "48:00:00"
     },
     "convert_mm":
     {
-        "c" : 5,
+        "c" : 8,
         "mem" : 10G,
         "t": "5:00:00"
     }

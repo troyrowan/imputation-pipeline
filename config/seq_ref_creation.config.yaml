@@ -1,6 +1,6 @@
 rules: ["variant_stats", "tranche_extract", "phasing", "convert_mm"]
 
-1kbulls_dir: /storage/htc/schnabellab/results/9913/wgs/1kbulls_ars1.2/vcf/200627_Run8_TauInd/
+1kbulls_dir: /storage/htc/schnabellab/results/9913/wgs/1kbulls_ars1.2/vcf/200627_Run8_TauInd
 
 run_name: "200708_Run8_refbuild"
 
@@ -10,6 +10,8 @@ mm_threads: 8
 
 bcftools_threads: 8
 
-allele_count: "AC20"
+allele_count: "20"
 
 tranche: "T90"
+
+filter: "PASS,VQSRTrancheINDEL90.00to99.00,VQSRTrancheSNP90.00to99.00"
