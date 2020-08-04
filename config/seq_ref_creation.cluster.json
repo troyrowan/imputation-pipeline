@@ -5,7 +5,7 @@
         "account" : "animalsci",
         "mem" : 2G,
         "c": 1,
-        "t": "0:05:00",
+        "t": "1:00:00",
         "o": "log/{wildcards.run_name}/slurm_out/{rule}/{wildcards}.%j.out"
     },
     "variant_stats":
@@ -21,14 +21,14 @@
     },
     "phasing":
     {
-        "c" : 16,
-        "mem" : 60G,
+        "c" : 48,
+        "mem" : 200G,
         "t": "48:00:00"
     },
     "convert_mm":
     {
         "c" : 8,
-        "mem" : 10G,
+        "mem" : 50G,
         "t": "5:00:00"
     }
 }
