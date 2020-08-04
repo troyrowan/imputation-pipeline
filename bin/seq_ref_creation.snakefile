@@ -14,7 +14,11 @@ rule targets:
 		filter = expand("reference_build/{run_name}/reference/{run_name}.{filter}.chr{chr}.m3vcf.gz",
 		run_name = config["run_name"],
 		filter = config["tranche"]+"_"+config["allele_count"],
-		chr = list(range(1,30)) + ["X", "Y"])
+		chr = list(range(1,30)) + ["X"]),
+		# info = expand("reference_build/{run_name}/filtered_stats/{run_name}.{filter}.chr{chr}.info",
+		# run_name = config["run_name"],
+		# filter = config["tranche"]+"_"+config["allele_count"],
+		# chr = list(range(1,30)) + ["X", "Y"])
 	# shell:
 	# 	"rm .snakemake/*_tracking/*"
 
@@ -51,7 +55,17 @@ rule tranche_extract:
 		module load bcftools
 		psrecord "bcftools view -i 'AC>={params.AC}' -f {params.filter} --max-alleles 2 -v snps {input.vcf} --threads {params.threads} -O z -o {output.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
 		"""
-
+rule post_filtering_stats:
+	input:
+		vcf = "reference_build/{run_name}/tranche_extract/{run_name}.{filter}.chr{chr}.vcf.gz"
+	params:
+		psrecord = "log/{run_name}/psrecord/post_filtering_stats/post_filtering_stats.chr{chr}.log"
+	output:
+		info = "reference_build/{run_name}/filtered_stats/{run_name}.{filter}.chr{chr}.info"
+	shell:
+		"""
+		module load bcftools
+		psrecord "bcftools query -f '%CHROM %POS %REF %ALT %QUAL %FILTER %AC %AF %AN %DP %ExcessHet %FS %InbreedingCoeff %MLEAC %MLEAF %MQ %QD %SOR %VQSLOD %culprit \n' {input.vcf} > {output.info}" --log {params.psrecord} --interval 5"""
 #BTA1 is 5.85% genome length, so that'll set the boundries for our memory/runtime when phasing
 #Expecting BTA1 to have 5,537,259 SNPs (from T99 based on how many came out of BTA28)
 #Based on Eagle Manual (150K individuals take 1GB per 1,000 SNPs) we should need 150GB for BTA1 (less for others)
