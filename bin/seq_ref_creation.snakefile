@@ -96,7 +96,7 @@ rule convert_mm:
 		oprefix = "reference_build/{run_name}/reference/{run_name}.{filter}.chr{chr}",
 		chrom = "{chr}",
 		threads = config["mm_threads"],
-		psrecord = "log/{run_name}/psrecord/phasing/phasing.chr{chr}.log"
+		psrecord = "log/{run_name}/psrecord/convert_mm/convert_mm.chr{chr}.log"
 	output:
 		"reference_build/{run_name}/reference/{run_name}.{filter}.chr{chr}.m3vcf.gz"
 	shell:
