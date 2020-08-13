@@ -6,7 +6,7 @@ run_name: "200708_Run8_refbuild"
 
 eagle_threads: 48
 
-mm_threads: 8
+mm_threads: 1
 
 bcftools_threads: 8
 
