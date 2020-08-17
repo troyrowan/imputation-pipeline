@@ -8,11 +8,11 @@ for x in expand("log/{run_name}/psrecord/{rule}", run_name = config['run_name'],
 #Generates a single merged file with all filtering
 rule filter_target:
 	input:
-		hwe = expand("imputation_runs/{run_name}/monomorphic_filtered/{sample}.log",
-		run_name = config["run_name"],
-		sample = config["sample"])
-		# hwe=expand("imputation_runs/{run_name}/merged_files/{run_name}.bed",
-		# run_name = config["run_name"]),
+		# hwe = expand("imputation_runs/{run_name}/monomorphic_filtered/{sample}.log",
+		# run_name = config["run_name"],
+		# sample = config["sample"])
+		merged=expand("imputation_runs/{run_name}/merged_files/{run_name}.bed",
+		run_name = config["run_name"]),
 		# vcf=expand("imputation_runs/{run_name}/vcf_per_assay/{sample}.vcfregion",
 		# run_name=config["run_name"],
 		# sample=config["sample"])
