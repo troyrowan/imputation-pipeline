@@ -14,7 +14,7 @@ bim = []
 fam = []
 
 for i in glob.glob(input+'/*.fam'): #Each of these searches for any file in directory that ends in "bed", "bim", or "fam"
-    bed.append(i.rstrip('.fam'))
+    bed.append(i.replace(".fam", ""))
 
 with open(output, 'w+') as f:	#Open allfiles.txt that will be used in merge step
    for t in bed:
