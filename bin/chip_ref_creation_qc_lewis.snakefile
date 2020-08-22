@@ -246,13 +246,13 @@ rule filter_hwe_variants:
 
 rule filter_monomorphic:
 	input:
-		bed=temp("imputation_runs/{run_name}/hwe_filtered/{sample}.bed"),
-		bim="imputation_runs/{run_name}/hwe_filtered/{sample}.bim",
-		fam="imputation_runs/{run_name}/hwe_filtered/{sample}.fam",
-		log="imputation_runs/{run_name}/hwe_filtered/{sample}.log",
+		bed=temp("imputation_runs/{run_name}/individual_filtered/{sample}.bed"),
+		bim="imputation_runs/{run_name}/individual_filtered/{sample}.bim",
+		fam="imputation_runs/{run_name}/individual_filtered/{sample}.fam",
+		log="imputation_runs/{run_name}/individual_filtered/{sample}.log",
 	params:
 		oprefix="imputation_runs/{run_name}/monomorphic_filtered/{sample}",
-		inprefix="imputation_runs/{run_name}/hwe_filtered/{sample}",
+		inprefix="imputation_runs/{run_name}/individual_filtered/{sample}",
 		threads = config["plink_threads"],
 		mem = config["plink_mem"],
 		mac = config["mac_filter"], #This should default to just remove monomorphic SNPs, but can be changed in the config file if wanted
@@ -327,7 +327,7 @@ rule filter_logging:
 	input:
 		snp = expand("{{run_name}}/snp_filtered/{sample}.log", sample = config["sample"]),
 		ind = expand("{{run_name}}/individual_filtered/{sample}.log", sample = config["sample"]),
-		hwe = expand("{{run_name}}/hwe_filtered/{sample}.log", sample = config["sample"]),
+		#hwe = expand("{{run_name}}/hwe_filtered/{sample}.log", sample = config["sample"]),
 		mac = expand("{{run_name}}/monomorphic_filtered/{sample}.log", sample = config["sample"])
 	params:
 		prefix = "{run_name}",
