@@ -1,7 +1,7 @@
 ##include: "bigrefprep.snakefile"
 #include: "190122_refcreation.snakefile"
 include: "chip_qc_lewis.snakefile"
-include: "chip_ref_creation_lewis.snakefile"
+#include: "chip_ref_creation_lewis.snakefile"
 
 #snakemake -s chip_imp_lewis.snakefile --jobs 1000 --rerun-incomplete --keep-going --latency-wait 30 --configfile chip_imp_lewis.config.yaml --cluster-config chip_imp_lewis.cluster.json --cluster "sbatch -p {cluster.p} -o {cluster.o} --account {cluster.account} -t {cluster.t} -c {cluster.c} --mem {cluster.mem} --account {cluster.account}" -np
 
@@ -16,7 +16,10 @@ rule bigref_done: #Last file create is specified up here. Use expand to indicate
 	input:#Standard outputs for the pipeline are a dosage vcf file and a hardcall only vcf file. Have ability to make dosage input for GEMMA and other file types
 		gen = expand("imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz",
 		run_name = config["run_name"],
-		chr = list(range(1,32)))
+		chr = list(range(3,31)))
+		# gen = expand("imputation_runs/{run_name}/assay_raw_vcf/{run_name}.chr{chr}.vcf.gz",
+		# run_name = config["run_name"],
+		# chr = list(range(1,31)))
 		# mgf = expand("imputation_runs/{run_name}/imputed_genotypes/{run_name}.hardcall.vcf.gz",
 		# run_name = config["run_name"])
 		#chroms = expand("{run_name}/imputed_genotypes_single_chrom/{run_name}.chr{chr}.dose.mgf.gz", run_name = config["run_name"], chr = list(range(1,30)))
@@ -48,12 +51,12 @@ rule assay_chrsplit:
 		"""
 		module load plink
 		module load bcftools
-		psrecord "plink --bfile {params.inprefix} --cow --real-ref-alleles --chr {params.chr} --nonfounders --threads {params.threads} --memory {params.mem} --recode vcf --out {params.oprefix}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
+		psrecord "plink --bfile {params.inprefix} --cow --real-ref-alleles --chr {params.chr} --nonfounders --threads {params.threads} --memory {params.mem} --recode vcf-iid --out {params.oprefix}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
 		"""
 
 rule bigref_phasing:
 	input:
-		refvcf = expand("imputation_runs/{ref_version}/vcf_per_assay/{ref}.chr{{chr}}.vcf.gz",
+		refvcf = expand("reference_build/{ref_version}/vcf_per_assay/{ref}.chr{{chr}}.vcf.gz",
 		ref = config["hdref"],
 		ref_version = config["ref_version"]),
 		vcf = "imputation_runs/{run_name}/assay_raw_vcf/{run_name}.chr{chr}.vcf.gz",
@@ -76,7 +79,7 @@ rule bigref_phasing:
 
 rule imputation: #A single round of imputation for all target assays.
 	input: #Reference files are cross-imputed HD/F250 assays for all individuals genotyped on either or both assays
-		ref = expand("imputation_runs/{ref_version}/reference/combined/bigref.850k.chr{{chr}}.m3vcf.gz",
+		ref = expand("reference_build/{ref_version}/reference/combined/bigref.850k.chr{{chr}}.m3vcf.gz",
 		ref_version = config["ref_version"]),
 		haps = "imputation_runs/{run_name}/eagle_merged/{run_name}.chr{chr}.vcf.gz", #Phased VCF of target assays
 		hapstbi = "imputation_runs/{run_name}/eagle_merged/{run_name}.chr{chr}.vcf.gz.tbi",
