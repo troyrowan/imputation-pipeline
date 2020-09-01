@@ -1,0 +1,23 @@
+{
+    "__default__":
+    {
+        "p" : "General,Lewis,BioCompute,htc4,hpc5",
+        "account" : "animalsci",
+        "mem" : 2G,
+        "c": 1,
+        "t": "0:05:00",
+        "o": "testing/log/{wildcards.ref_version}/slurm_out/{rule}/{wildcards}.%j.out"
+    },
+    "create_testing_phasing_ref":
+    {
+        "c" : 1,
+        "mem" : 50G,
+        "t": "24:00:00"
+    },
+    "create_testing_imp_ref":
+    {
+        "c" : 1,
+        "mem" : 50G,
+        "t": "5:00:00"
+    }
+}

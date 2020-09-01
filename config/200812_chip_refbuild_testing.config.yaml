@@ -1,0 +1,27 @@
+rules: ["create_testing_phasing_ref", "create_testing_phasing_ref"]
+
+ref_assays: ["F250_all_ref", "HD_all_ref"]
+
+hdref: "HD_all_ref"
+
+f250ref: "F250_all_ref"
+
+ref_version: "200812_chip_refbuild"
+
+run_name: "200812_chip_refbuild_testing"
+
+ind_callrate_filter: 0.1
+
+snp_callrate_filter: 0.1
+
+hwe_filter: 1e-50
+
+mac_filter: 1
+
+plink_threads: 4
+
+plink_mem: 2000
+
+eagle_threads: 16
+
+mm_threads: 8
