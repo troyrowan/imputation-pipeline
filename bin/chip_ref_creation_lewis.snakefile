@@ -1,4 +1,4 @@
-include: "chip_qc_lewis.snakefile"
+include: "chip_ref_creation_qc_lewis.snakefile"
 
 import os
 # Make log directories if they don't exist
@@ -11,13 +11,25 @@ for x in expand("log/{run_name}/psrecord/{rule}", run_name = config['run_name'],
 
 rule targ:
 	input:
-		targ=lambda wildcards: expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz",
+		targ=lambda wildcards: expand("reference_build/{run_name}/reference/stats/bigref.850k.chr{chr}.stats.txt",
 		run_name=config["run_name"],
-		chr=list(range(1,32)))
+		chr=list(range(1,31)))
+		# targ=lambda wildcards: expand("reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz",
+		# run_name=config["run_name"],
+		# chr=list(range(1,31)))
 
-		#"imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz"
+		# targ=lambda wildcards: expand("reference_build/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz",
+		# run_name=config["run_name"],
+		# chr=list(range(1,2)),
+		# sample=config["ref_assays"])
+		# targ=lambda wildcards: expand("reference_build/{run_name}/reference/{sample}.chr{chr}.m3vcf.gz",
+		# run_name=config["run_name"],
+		# chr=list(range(1,2)),
+		# sample=config["ref_assays"])
+
+		#"reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz"
 		#refs=expand("reference/{run_name}/{sample}.chr{chr}.vcf.gz.tbi", sample=config["sample"], date=config["date"], chr=list(range(1,30)))
-		# ref=expand("imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
+		# ref=expand("refer{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
 		# run_name=config["run_name"],
 		# chr=list(range(1,32)))
 	shell:
@@ -53,14 +65,14 @@ rule recode_vcf:
 rule eagle_merged:
 	input:
 		vcf="imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf.gz",
-		map="genetic_map_1cMperMb.txt" #Map should be changed
+		map="bin/genetic_map_1cMperMb.txt" #Map should be changed
 	params:
-		out="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased",
+		out="reference_build/{run_name}/eagle_merged/bigref.chr{chr}.phased",
 		threads=config["eagle_threads"],
 		psrecord = "log/{run_name}/psrecord/eagle_merged/eagle_merged.chr{chr}.log"
 	output:
-		vcf="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz",
-		tabix="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz.tbi"
+		vcf="reference_build/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz",
+		tabix="reference_build/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz.tbi"
 	shell:
 		"""
 		module load bcftools
@@ -76,8 +88,8 @@ rule eagle_merged:
 # 		bim="imputation_runs/{run_name}/hwe_filtered/{sample}.bim",
 # 		fam="imputation_runs/{run_name}/hwe_filtered/{sample}.fam"
 # 	output:
-# 		keep_ids="imputation_runs/{run_name}/vcf_per_assay/{sample}.keepvcf",
-# 		keep_snps="imputation_runs/{run_name}/vcf_per_assay/{sample}.vcfregion"
+# 		keep_ids="reference_build/{run_name}/vcf_per_assay/{sample}.keepvcf",
+# 		keep_snps="reference_build/{run_name}/vcf_per_assay/{sample}.vcfregion"
 # 	shell:
 # 		"""
 # 		psrecord "python bin/vcf_extraction_maker.py {params.bim} {params.fam} {output.keep_snps} {output.keep_ids}" --log {params.psrecord} --include-children --interval 5
@@ -98,19 +110,18 @@ rule eagle_merged:
 
 rule refvcf_per_assay: #filter the vcfs on a per assay basis
 	input:
-		# vcfgz="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.fixed.vcf.gz",
-		# index="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.fixed.vcf.gz.tbi",
-		vcfgz="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz",
-		index="imputation_runs/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz.tbi",
-		keep_ids="imputation_runs/{run_name}/vcf_per_assay/{sample}.keepvcf", #This iteration of the pipeline is only for testing Minimac's imputation accuracy
-		#keep_ids="extract_lists/{run_name}/{sample}.chr{chr}.keepvcf",
+		# vcfgz="reference_build/{run_name}/eagle_merged/bigref.chr{chr}.phased.fixed.vcf.gz",
+		# index="reference_build/{run_name}/eagle_merged/bigref.chr{chr}.phased.fixed.vcf.gz.tbi",
+		vcfgz="reference_build/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz",
+		index="reference_build/{run_name}/eagle_merged/bigref.chr{chr}.phased.vcf.gz.tbi",
+		keep_ids="imputation_runs/{run_name}/vcf_per_assay/{sample}.keepvcf",
 		keep_maps="imputation_runs/{run_name}/vcf_per_assay/{sample}.vcfregion"
 	params:
-		vcf="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf",
+		vcf="reference_build/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf",
 		psrecord = "log/{run_name}/psrecord/refvcf_per_assay/refvcf_per_assay.{sample}.chr{chr}.log"
 	output:
-		vcf="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz",
-		tbi="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz.tbi"
+		vcf="reference_build/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz",
+		tbi="reference_build/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz.tbi"
 	shell:
 		"""
 		module load bcftools
@@ -123,16 +134,14 @@ rule mm4_convert:
 		#tbi=expand("phased_refs/{run_name}/{sample}.chr{{chr}}.vcf.gz.tbi", ref_version=config["ref_version"], sample=config["refs"])
 		#vcf="phased_refs/{run_name}/{sample}.chr{chr}.vcf.gz",
 		#tbi="phased_refs/{run_name}/{sample}.chr{chr}vcf.gz.tbi"
-		vcf="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz",
-		tbi="imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz.tbi",
+		vcf="reference_build/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz",
+		tbi="reference_build/{run_name}/vcf_per_assay/{sample}.chr{chr}.vcf.gz.tbi"
 	params:
-		oprefix="imputation_runs/{run_name}/reference/{sample}.chr{chr}",
+		oprefix="reference_build/{run_name}/temp_reference/{sample}.chr{chr}",
 		chrom="{chr}",
 		psrecord = "log/{run_name}/psrecord/mm4_convert/mm4_convert.{sample}.chr{chr}.log"
-	wildcard_constraints:
-		sample=config["sample"]
 	output:
-		hd="imputation_runs/{run_name}/reference/{sample}.chr{chr}.m3vcf.gz"
+		hd="reference_build/{run_name}/temp_reference/{sample}.chr{chr}.m3vcf.gz"
 	shell:
 		"""
 		psrecord "/home/tnr343/Minimac3/bin/Minimac3-omp --refHaps {input.vcf} --processReference --cpu 5 --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
@@ -140,52 +149,52 @@ rule mm4_convert:
 
 rule refcreation_hd:
 	input:
-		f250=expand("imputation_runs/{run_name}/reference/{sample}.chr{{chr}}.m3vcf.gz",
+		f250=expand("reference_build/{run_name}/temp_reference/{sample}.chr{{chr}}.m3vcf.gz",
 		run_name=config["run_name"],
 		sample=config["f250ref"]),
-		hd=expand("imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{{chr}}.vcf.gz",
+		hd=expand("reference_build/{run_name}/vcf_per_assay/{sample}.chr{{chr}}.vcf.gz",
 		run_name=config["run_name"],
 		sample=config["hdref"]),
-		hdtbi=expand("imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{{chr}}.vcf.gz.tbi",
+		hdtbi=expand("reference_build/{run_name}/vcf_per_assay/{sample}.chr{{chr}}.vcf.gz.tbi",
 		run_name=config["run_name"],
 		sample=config["hdref"])
 	params:
-		hdimputedprefix="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}",
-		f250imputedprefix="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}",
+		hdimputedprefix="reference_build/{run_name}/reference/crossimp/hd.850k.chr{chr}",
+		f250imputedprefix="reference_build/{run_name}/reference/crossimp/f250.850k.chr{chr}",
 		chrom ="{chr}",
 		threads=config["mm_threads"],
 		psrecord = "log/{run_name}/psrecord/refcreation_hd/refcreation_hd.chr{chr}.log"
 	output:
-		hdimputed="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}.dose.vcf.gz",
-		sorted="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}.vcf.gz",
-		hdimputedtbi="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}.vcf.gz.tbi"
+		hdimputed="reference_build/{run_name}/reference/crossimp/hd.850k.chr{chr}.dose.vcf.gz",
+		sorted="reference_build/{run_name}/reference/crossimp/hd.850k.chr{chr}.vcf.gz",
+		hdimputedtbi="reference_build/{run_name}/reference/crossimp/hd.850k.chr{chr}.vcf.gz.tbi"
 	shell:
 		"""
 		module load bcftools
 		psrecord "/home/tnr343/Minimac4/release-build/minimac4 --refHaps {input.f250} --haps {input.hd} --myChromosome {params.chrom} --format GT --cpu {params.threads} --allTypedSites --prefix {params.hdimputedprefix}; bcftools sort {output.hdimputed} -O z -o {output.sorted};tabix {output.sorted}" --log {params.psrecord} --include-children --interval 5
 		"""
-
+#hd="reference_build/{run_name}/reference/{sample}.chr{chr}.m3vcf.gz"
 rule refcreation_f250:
 	input:
-		hd=expand("imputation_runs/{run_name}/reference/{sample}.chr{{chr}}.m3vcf.gz",
+		hd=expand("reference_build/{run_name}/temp_reference/{sample}.chr{{chr}}.m3vcf.gz",
 		run_name=config["run_name"],
 		sample=config["hdref"]),
-		f250tbi=expand("imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{{chr}}.vcf.gz.tbi",
+		f250tbi=expand("reference_build/{run_name}/vcf_per_assay/{sample}.chr{{chr}}.vcf.gz.tbi",
 		run_name=config["run_name"],
 		sample=config["f250ref"]),
-		f250=expand("imputation_runs/{run_name}/vcf_per_assay/{sample}.chr{{chr}}.vcf.gz",
+		f250=expand("reference_build/{run_name}/vcf_per_assay/{sample}.chr{{chr}}.vcf.gz",
 		run_name=config["run_name"],
-		sample=config["f250ref"]),
+		sample=config["f250ref"])
 	params:
-		hdimputedprefix="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}",
-		f250imputedprefix="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}",
+		hdimputedprefix="reference_build/{run_name}/reference/crossimp/hd.850k.chr{chr}",
+		f250imputedprefix="reference_build/{run_name}/reference/crossimp/f250.850k.chr{chr}",
 		chrom ="{chr}",
 		threads=config["mm_threads"],
 		psrecord = "log/{run_name}/psrecord/refcreation_f250/refcreation_f250.chr{chr}.log"
 	output:
-		f250imputed="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.dose.vcf.gz",
-		sorted="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz",
-		f250imputedtabix="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz.tbi"
+		f250imputed="reference_build/{run_name}/reference/crossimp/f250.850k.chr{chr}.dose.vcf.gz",
+		sorted="reference_build/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz",
+		f250imputedtabix="reference_build/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz.tbi"
 	shell:
 		"""
 		module load bcftools
@@ -194,32 +203,46 @@ rule refcreation_f250:
 
 rule combinerefs:
 	input:
-		hdimputed="imputation_runs/{run_name}/reference/crossimp/hd.850k.chr{chr}.vcf.gz",
-		f250imputed="imputation_runs/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz"
+		hdimputed="reference_build/{run_name}/reference/crossimp/hd.850k.chr{chr}.vcf.gz",
+		f250imputed="reference_build/{run_name}/reference/crossimp/f250.850k.chr{chr}.vcf.gz"
 	params:
 		chrom="{chr}",
-		oprefix="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}",
+		oprefix="reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}",
 		psrecord = "log/{run_name}/psrecord/combinerefs/combinerefs.bigref.850k.chr{chr}.log"
 	output:
-		ref="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
-		reftbi="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
+		ref="reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
+		reftbi="reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
 	shell:
 		"""
 		module load bcftools
-		psrecord "bcftools merge {input.hdimputed} {input.f250imputed} -O z -o {output.ref}; tabix {output.ref}" --log {params.psrecord} --include-children --interval 5
+		psrecord "bcftools merge {input.hdimputed} {input.f250imputed} --force-samples -O z -o {output.ref}; tabix {output.ref}" --log {params.psrecord} --include-children --interval 5
 		"""
-
+#Above rule will
 rule reformat_refs:
 	input:
-		ref="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
-		reftbi="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
+		ref="reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
+		reftbi="reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
 	params:
 		psrecord = "log/{run_name}/psrecord/reformat_refs/reformat_refs.chr{chr}.log",
 		chrom = "{chr}",
-		oprefix="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}"
+		oprefix="reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}"
 	output:
-		refm3vcf="imputation_runs/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz"
+		refm3vcf="reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz"
 	shell:
 		"""
 		psrecord "/home/tnr343/Minimac3/bin/Minimac3-omp --refHaps {input.ref} --processReference --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+		"""
+
+rule chip_ref_stats:
+	input:
+		ref="reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
+		reftbi="reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}.vcf.gz.tbi"
+	#params:
+		#psrecord = "log/{run_name}/psrecord/chip_ref_stats/chip_ref_stats.chr{chr}.log"
+	output:
+		stats="reference_build/{run_name}/reference/stats/bigref.850k.chr{chr}.stats.txt"
+	shell:
+		"""
+		module load bcftools
+		bcftools stats {input.ref} > {output.stats}
 		"""

@@ -16,7 +16,7 @@ rule bigref_done: #Last file create is specified up here. Use expand to indicate
 	input:#Standard outputs for the pipeline are a dosage vcf file and a hardcall only vcf file. Have ability to make dosage input for GEMMA and other file types
 		gen = expand("imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz",
 		run_name = config["run_name"],
-		chr = list(range(3,31)))
+		chr = list(range(1,31)))
 		# gen = expand("imputation_runs/{run_name}/assay_raw_vcf/{run_name}.chr{chr}.vcf.gz",
 		# run_name = config["run_name"],
 		# chr = list(range(1,31)))
@@ -91,11 +91,12 @@ rule imputation: #A single round of imputation for all target assays.
 		psrecord = "log/{run_name}/psrecord/imputation/imputation.chr{chr}.log"
 	output:
 		gen = "imputation_runs/{run_name}/minimac_imputed/{run_name}.chr{chr}.dose.vcf.gz", #Outputs VCF file with both dosage and hardcall information
+		tbi = "imputation_runs/{run_name}/minimac_imputed/{run_name}.chr{chr}.dose.vcf.gz.tbi"
 		#gen = "minimac_imputed/combined_imputed/mm4/{run_name}.chr{chr}.dose.vcf.gz"
 		#vcf = "minimac_imputed/combined_imputed/{run_name}.chr{chr}.m3vcf.gz"
 	shell: #Minimac3 appears to be working better, not sure what the hangup with Minimac4 is, but will explore in the near future
 		"""
-		psrecord "/storage/hpc/group/UMAG/SCRIPTS/Minimac4-1.0.2/release-build/minimac4 --refHaps {input.ref} --haps {input.haps} --allTypedSites --myChromosome {params.chrom} --cpu {params.threads} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+		psrecord "/storage/hpc/group/UMAG/SCRIPTS/Minimac4-1.0.2/release-build/minimac4 --refHaps {input.ref} --haps {input.haps} --allTypedSites --myChromosome {params.chrom} --cpu {params.threads} --prefix {params.oprefix};tabix {output.gen}" --log {params.psrecord} --include-children --interval 5
 		"""
 
 # #Minimac's dosage conversion does not work at this point. If it ever does, this'll be the rule that makes it work
@@ -119,6 +120,8 @@ rule imputation: #A single round of imputation for all target assays.
 # 		"(DosageConvertor --vcfDose {input.gen} --info {input.info} --MyChromosome {params.chrom} --prefix {params.oprefix}) > {log}"
 
 #VCF files need to be ordered for conversion to work correctly
+#If this step has issues, it may be that the perl library isn't pointing to the correct vcftools install
+#https://www.biostars.org/p/15163/
 rule order_vcfs:
 	input:
 		vcf = "imputation_runs/{run_name}/minimac_imputed/{run_name}.chr{chr}.dose.vcf.gz", #each single-chromosome VCF file needs reordered
@@ -132,7 +135,8 @@ rule order_vcfs:
 	shell: #shuffle-cols does exactly what we need it to. Then bgzip and tabix output for concatenation with bcftools
 		"""
 		module load bcftools
-		psrecord " ~/vcftools_0.1.13/perl/vcf-shuffle-cols -t {input.template} {input.vcf} > {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5"""
+		psrecord "bin/vcftools_0.1.13/perl/vcf-shuffle-cols -t {input.template} {input.vcf} > {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
+		"""
 
 # rule gwas_format: #Have changed this to do the longest step on a single chromosome basis, can't believe it took me this long...
 # 	input:
@@ -168,8 +172,10 @@ rule concat_hardcall_vcf:#Puts individual chromosome files back into a single VC
 		vcf = "imputation_runs/{run_name}/imputed_genotypes/{run_name}.hardcall.vcf.gz",
 		tbi = "imputation_runs/{run_name}/imputed_genotypes/{run_name}.hardcall.vcf.gz.tbi"
 	shell:
-		"""module load bcftools
-		psrecord "bcftools concat {input.concat} -O z -o {output.vcf}; tabix {output.vcf}"  --log {params.psrecord} --include-children --interval 5"""
+		"""
+		module load bcftools
+		psrecord "bcftools concat {input.concat} -O z -o {output.vcf}; tabix {output.vcf}"  --log {params.psrecord} --include-children --interval 5
+		"""
 #Use BCFtools to combine individual sorted VCF files
 rule concat_vcf:
 	input:

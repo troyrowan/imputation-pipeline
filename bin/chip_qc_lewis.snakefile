@@ -312,13 +312,15 @@ rule filter_logging:
 		hwe = expand("{{run_name}}/hwe_filtered/{sample}.log", sample = config["sample"])
 	params:
 		prefix = "{run_name}",
-		psrecord = "log/{run_name}/psrecord/filter_logging/filter_logging.{sample}.log"
+		psrecord = "log/{run_name}/psrecord/filter_logging/filter_logging.{sample}.log",
+		pfiles = "imputation_runs/{run_name}/hwe_filtered"
 	output:
-		log = "imputation_runs/{run_name}/filter_logs/{run_name}_filtering_report.txt"
+		log = "imputation_runs/{run_name}/filter_logs/{run_name}_filtering_report.txt",
+		mergefilelist= "imputation_runs/{run_name}/merged_files/{run_name}.allfiles.txt"
 	shell:
 		"""
 		module load plink
-		psrecord "python bin/combined_filter_logging.py {params.prefix} > {output.log}" --log {params.psrecord} --include-children --interval 5
+		psrecord "python bin/file_list_maker.py {params.pfiles} {output.mergefilelist}; python bin/combined_filter_logging.py {params.prefix} > {output.log} " --log {params.psrecord} --include-children --interval 5
 		"""
 #Filtering report will be in the following format:
 #For each assay:
@@ -354,15 +356,14 @@ rule merge_assays:
 		expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.bed", sample = config["sample"]),
 		expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.bim", sample = config["sample"]),
 		expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.fam", sample = config["sample"]),
-		expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.log", sample = config["sample"])
+		expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.log", sample = config["sample"]),
+		mergefilelist= "imputation_runs/{run_name}/merged_files/{run_name}.allfiles.txt"
 	params:
 		oprefix="imputation_runs/{run_name}/merged_files/{run_name}",
-		pfiles = "imputation_runs/{run_name}/hwe_filtered",
 		threads = config["plink_threads"],
 		mem = config["plink_mem"],
 		psrecord = "log/{run_name}/psrecord/merge_assays/merge_assays.log"
 	output:
-		mergefilelist= "imputation_runs/{run_name}/merged_files/{run_name}.allfiles.txt",
 		bim = "imputation_runs/{run_name}/merged_files/{run_name}.bim",
 		fam = "imputation_runs/{run_name}/merged_files/{run_name}.fam",
 		log = "imputation_runs/{run_name}/merged_files/{run_name}.log",
@@ -370,5 +371,5 @@ rule merge_assays:
 	shell: #This list maker creates a list of all assays being imputed. This is given to PLINK's "--merge-list" command
 		"""
 		module load plink
-		psrecord "python bin/file_list_maker.py {params.pfiles} {output.mergefilelist}; plink --merge-list {output.mergefilelist} --cow --merge-equal-pos --real-ref-alleles --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+		psrecord "plink --merge-list {input.mergefilelist} --cow --merge-equal-pos --real-ref-alleles --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""

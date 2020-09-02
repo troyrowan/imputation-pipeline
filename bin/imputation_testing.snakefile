@@ -11,15 +11,15 @@
 #Then essentially all that we need to do is add a "REF" wild card to phasing and imputation steps, which will make these refer the appropriate reference sets
 import os
 # Make log directories if they don't exist
-for x in expand("testing/log/{ref_version}/slurm_out/{rule}", ref_version = config['ref_version'], rule = config['rules']):
+for x in expand("testing/log/{run_name}/slurm_out/{rule}", run_name = config['run_name'], rule = config['rules']):
 	os.makedirs(x, exist_ok = True)
-for x in expand("testing/log/{ref_version}/psrecord/{rule}", ref_version = config['ref_version'], rule = config['rules']):
+for x in expand("testing/log/{run_name}/psrecord/{rule}", run_name = config['run_name'], rule = config['rules']):
 	os.makedirs(x, exist_ok = True)
 
 rule bigref_done: #Last file create is specified up here. Use expand to indicate how we want wild cards filled in.
 	input:#Standard outputs for the pipeline are a dosage vcf file and a hardcall only vcf file. Have ability to make dosage input for GEMMA and other file types
-		gen = expand("testing/reference/imputation/{ref_version}/{ref}_testing_removed.chr{chr}.m3vcf.gz",
-		ref_version = config["ref_version"],
+		gen = expand("testing/reference/imputation/{run_name}/{ref}_testing_removed.chr{chr}.m3vcf.gz",
+		run_name = config["run_name"],
 		ref = ["HD", "F250", "850K"],
 		chr = list(range(1,31)))
 
@@ -51,37 +51,47 @@ rule bigref_done: #Last file create is specified up here. Use expand to indicate
 #This step should allow this to be done for new reference versions provided nothing changes with the input structure in the chip_ref_creation snakefile remains the same
 rule create_testing_phasing_ref:
 	input:
-		hdrefvcf = expand("reference_build/{{ref_version}}/vcf_per_assay/{ref}.chr{{chr}}.vcf.gz",
-		ref = config["hdref"]),
-		f250refvcf = expand("reference_build/{{ref_version}}/vcf_per_assay/{ref}.chr{{chr}}.vcf.gz",
-		ref = config["f250ref"]),
-		crossimprefvcf="reference_build/{ref_version}/reference/combined/bigref.850k.chr{chr}.vcf.gz",
+		hdrefvcf = expand("reference_build/{ref_version}/vcf_per_assay/{ref}.chr{{chr}}.vcf.gz",
+		ref = config["hdref"],
+		ref_version = config["ref_version"]),
+		f250refvcf = expand("reference_build/{ref_version}/vcf_per_assay/{ref}.chr{{chr}}.vcf.gz",
+		ref = config["f250ref"],
+		ref_version = config["ref_version"]),
+		crossimprefvcf=expand("reference_build/{ref_version}/reference/combined/bigref.850k.chr{{chr}}.vcf.gz",
+		ref_version = config["ref_version"]),
 		ids = "testing/testing_ids.txt"
 	params:
-		psrecord = "log/{ref_version}/psrecord/create_testing_hd_phasing_ref/create_testing_hd_phasing_ref.chr{chr}.log",
-		dir = "testing/reference/phasing/{ref_version}/*vcf.gz"
+		psrecord = "testing/log/{run_name}/psrecord/create_testing_phasing_ref/create_testing_hd_phasing_ref.chr{chr}.log",
+		dir = "testing/reference/phasing/{run_name}/*vcf.gz"
 	output:
-		hdrefvcf = "testing/reference/phasing/{ref_version}/HD_testing_removed.chr{chr}.vcf.gz",
-		f250refvcf = "testing/reference/phasing/{ref_version}/F250_testing_removed.chr{chr}.vcf.gz",
-		crossimprefvcf = "testing/reference/phasing/{ref_version}/850K_testing_removed.chr{chr}.vcf.gz"
+		hdrefvcf = "testing/reference/phasing/{run_name}/HD_testing_removed.chr{chr}.vcf.gz",
+		f250refvcf = "testing/reference/phasing/{run_name}/F250_testing_removed.chr{chr}.vcf.gz",
+		crossimprefvcf = "testing/reference/phasing/{run_name}/850K_testing_removed.chr{chr}.vcf.gz"
 	shell:
 		"""
 		module load bcftools
-		psrecord"bcftools view -S ^{input.ids} {input.hdrefvcf} -O z -o {output.hdrefvcf}; bcftools view -S ^{input.ids} {input.f250refvcf} -O z -o {output.f250refvcf}; bcftools view -S ^{input.ids} {input.crossimprefvcf} -O z -o {output.crossimprefvcf}; tabix {params.dir}" --log {params.psrecord} --include-children --interval 5"""
+		psrecord "bcftools view -S ^{input.ids} {input.hdrefvcf} --force-samples -O z -o {output.hdrefvcf}; bcftools view -S ^{input.ids} {input.f250refvcf} --force-samples -O z -o {output.f250refvcf}; bcftools view -S ^{input.ids} {input.crossimprefvcf} --force-samples -O z -o {output.crossimprefvcf}; tabix {params.dir}" --log {params.psrecord} --include-children --interval 5"""
+
 
 rule create_testing_imp_ref:
 	input:
-		refvcf = "testing/reference/phasing/{ref_version}/{ref}_testing_removed.chr{chr}.vcf.gz"
+		refvcf = "testing/reference/phasing/{run_name}/{ref}_testing_removed.chr{chr}.vcf.gz"
 	params:
-		psrecord = "log/{ref_version}/psrecord/create_testing_imp_ref/create_testing_imp_ref.chr{chr}.log",
-		oprefix = "testing/reference/imputation/{ref_version}/{ref}_testing_removed.chr{chr}",
+		psrecord = "testing/log/{run_name}/psrecord/create_testing_imp_ref/create_testing_imp_ref.chr{chr}.log",
+		oprefix = "testing/reference/imputation/{run_name}/{ref}_testing_removed.chr{chr}",
 		chrom = "{chr}"
 	output:
-		m3vcf = "testing/reference/imputation/{ref_version}/{ref}_testing_removed.chr{chr}.m3vcf.gz"
+		m3vcf = "testing/reference/imputation/{run_name}/{ref}_testing_removed.chr{chr}.m3vcf.gz"
 	shell:
 		"""
 		psrecord "/home/tnr343/Minimac3/bin/Minimac3-omp --refHaps {input.refvcf} --processReference --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
 		"""
+
+#This should be a cross-imputed 850K
+# rule create_testing_set:
+# 	input:
+# 		crossimprefvcf="reference_build/{ref_version}/reference/combined/bigref.850k.chr{chr}.vcf.gz"
+
 #Depending on which
 # rule bigref_phasing:
 # 	input:
