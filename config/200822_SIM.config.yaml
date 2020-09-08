@@ -24,7 +24,7 @@ mac_filter: 1
 
 plink_threads: 4
 
-plink_mem: 2000
+plink_mem: 2001
 
 eagle_threads: 16
 
