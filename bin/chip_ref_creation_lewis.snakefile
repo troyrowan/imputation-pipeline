@@ -1,4 +1,4 @@
-include: "chip_ref_creation_qc_lewis.snakefile"
+#include: "chip_ref_creation_qc_lewis.snakefile"
 
 import os
 # Make log directories if they don't exist
@@ -14,7 +14,7 @@ rule targ:
 		targ=lambda wildcards: expand("reference_build/{run_name}/reference/stats/bigref.850k.chr{chr}.stats.txt",
 		run_name=config["run_name"],
 		chr=list(range(1,31)))
-		# targ=lambda wildcards: expand("reference_build/{run_name}/reference/combined/bigref.850k.chr{chr}.m3vcf.gz",
+		# targ=lambda wildcards: expand("imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf.gz",
 		# run_name=config["run_name"],
 		# chr=list(range(1,31)))
 
@@ -49,7 +49,7 @@ rule recode_vcf:
 		vcf="imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf",
 		threads=config["plink_threads"],
 		mem=config["plink_mem"],
-		psrecord = "log/{run_name}/psrecord/recode_vcf/recode_vcf.log"
+		psrecord = "log/{run_name}/psrecord/recode_vcf/recode_vcf.chr{chr}.log"
 	output:
 		vcf=temp("imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf.gz"),
 		tabix=temp("imputation_runs/{run_name}/merged_files/{run_name}.chr{chr}.vcf.gz.tbi"),
@@ -58,7 +58,7 @@ rule recode_vcf:
 		"""
 		module load plink
 		module load bcftools
-		psrecord "plink --bfile {params.inprefix} --nonfounders --chr {params.chrom} --cow --memory {params.mem} --threads {params.threads} --real-ref-alleles --recode vcf --maf 0.0000001 --out {params.oprefix}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
+		psrecord "plink --bfile {params.inprefix} --nonfounders --chr {params.chrom} --cow --memory {params.mem} --threads {params.threads} --real-ref-alleles --recode vcf --maf 0.000000001 --out {params.oprefix}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
 		"""
 		#"(plink --bfile {params.inprefix} --nonfounders --chr {params.chrom} --chr-set 33 --memory 500 --maf 0.0001 --real-ref-alleles --make-bed --out {params.oprefix}) > {log}"
 #Memory requirements from Eagle 2.4.1 documentation: When phasing without a reference panel, Eagle’s memory use scales linearly with the number of samples (N) and the number of SNPs (M). For our tests on N=150K UK Biobank samples, Eagle required ≈1 GB RAM per 1,000 SNPs.

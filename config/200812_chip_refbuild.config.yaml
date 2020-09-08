@@ -1,4 +1,4 @@
-rules: ["ref_alt", "ref_build_start", "no_duplicates", "variant_stats", "filter_variants", "individual_stats", "filter_individuals", "hwe_stats", "filter_hwe_variants", "filter_monomorphic", "filter_logging", "merge_assays", "recode_vcf", "eagle_merged", "make_phasing_vcf_extract_lists", "refvcf_per_assay", "mm4_convert", "refcreation_hd", "refcreation_f250", "combinerefs", "reformat_refs"]
+rules: ["ref_alt", "ref_build_start", "no_duplicates", "variant_stats", "filter_variants", "individual_stats", "filter_individuals", "hwe_stats", "filter_hwe_variants", "filter_monomorphic", "filter_logging", "merge_assays", "recode_vcf", "eagle_merged", "make_phasing_vcf_extract_lists", "refvcf_per_assay", "mm4_convert", "refcreation_hd", "refcreation_f250", "combinerefs", "reformat_refs", "chip_ref_stats"]
 
 gt_path: "/storage/hpc/group/UMAG/WORKING/tnr343/imputation/chip_imputation/imputation-pipeline/reference_build/200812_chip_refbuild/raw_qc_data/"
 

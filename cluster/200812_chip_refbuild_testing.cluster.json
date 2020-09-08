@@ -6,13 +6,13 @@
         "mem" : 2G,
         "c": 1,
         "t": "0:05:00",
-        "o": "testing/log/{wildcards.ref_version}/slurm_out/{rule}/{wildcards}.%j.out"
+        "o": "testing/log/{wildcards.run_name}/slurm_out/{rule}/{wildcards}.%j.out"
     },
     "create_testing_phasing_ref":
     {
         "c" : 1,
         "mem" : 50G,
-        "t": "24:00:00"
+        "t": "1:00:00"
     },
     "create_testing_imp_ref":
     {
