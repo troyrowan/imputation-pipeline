@@ -91,12 +91,14 @@ rule imputation: #A single round of imputation for all target assays.
 		psrecord = "log/{run_name}/psrecord/imputation/imputation.chr{chr}.log"
 	output:
 		gen = "imputation_runs/{run_name}/minimac_imputed/{run_name}.chr{chr}.dose.vcf.gz", #Outputs VCF file with both dosage and hardcall information
-		tbi = "imputation_runs/{run_name}/minimac_imputed/{run_name}.chr{chr}.dose.vcf.gz.tbi"
+		#tbi = "imputation_runs/{run_name}/minimac_imputed/{run_name}.chr{chr}.dose.vcf.gz.tbi"
 		#gen = "minimac_imputed/combined_imputed/mm4/{run_name}.chr{chr}.dose.vcf.gz"
 		#vcf = "minimac_imputed/combined_imputed/{run_name}.chr{chr}.m3vcf.gz"
 	shell: #Minimac3 appears to be working better, not sure what the hangup with Minimac4 is, but will explore in the near future
 		"""
+		module load bcftools
 		psrecord "/storage/hpc/group/UMAG/SCRIPTS/Minimac4-1.0.2/release-build/minimac4 --refHaps {input.ref} --haps {input.haps} --allTypedSites --myChromosome {params.chrom} --cpu {params.threads} --prefix {params.oprefix};tabix {output.gen}" --log {params.psrecord} --include-children --interval 5
+
 		"""
 
 # #Minimac's dosage conversion does not work at this point. If it ever does, this'll be the rule that makes it work

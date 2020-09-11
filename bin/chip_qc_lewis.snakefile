@@ -80,7 +80,8 @@ rule no_duplicates:
 	output:
 		bed = temp("imputation_runs/{run_name}/no_duplicates/{sample}.bed"),
 		bim = "imputation_runs/{run_name}/no_duplicates/{sample}.bim",
-		fam = "imputation_runs/{run_name}/no_duplicates/{sample}.fam"
+		fam = "imputation_runs/{run_name}/no_duplicates/{sample}.fam",
+		log = "imputation_runs/{run_name}/no_duplicates/{sample}.log"
 	shell:
  		"""
 		module load plink
@@ -91,7 +92,8 @@ rule variant_stats:
 	input:
 		bed = "imputation_runs/{run_name}/no_duplicates/{sample}.bed",
 		bim = "imputation_runs/{run_name}/no_duplicates/{sample}.bim",
-		fam = "imputation_runs/{run_name}/no_duplicates/{sample}.fam"
+		fam = "imputation_runs/{run_name}/no_duplicates/{sample}.fam",
+		log = "imputation_runs/{run_name}/no_duplicates/{sample}.log"
 	params:
 		inprefix = "imputation_runs/{run_name}/no_duplicates/{sample}",
 		oprefix = "imputation_runs/{run_name}/snp_stats/{sample}",
@@ -307,12 +309,12 @@ rule filter_hwe_variants:
 #Parses log files and prints to sdout, point that to a filtering report.
 rule filter_logging:
 	input:
-		snp = expand("{{run_name}}/snp_filtered/{sample}.log", sample = config["sample"]),
-		ind = expand("{{run_name}}/individual_filtered/{sample}.log", sample = config["sample"]),
-		hwe = expand("{{run_name}}/hwe_filtered/{sample}.log", sample = config["sample"])
+		snp = expand("imputation_runs/{{run_name}}/snp_filtered/{sample}.log", sample = config["sample"]),
+		ind = expand("imputation_runs/{{run_name}}/individual_filtered/{sample}.log", sample = config["sample"]),
+		hwe = expand("imputation_runs/{{run_name}}/hwe_filtered/{sample}.log", sample = config["sample"])
 	params:
 		prefix = "{run_name}",
-		psrecord = "log/{run_name}/psrecord/filter_logging/filter_logging.{sample}.log",
+		psrecord = "log/{run_name}/psrecord/filter_logging/filter_logging.{run_name}.log",
 		pfiles = "imputation_runs/{run_name}/hwe_filtered"
 	output:
 		log = "imputation_runs/{run_name}/filter_logs/{run_name}_filtering_report.txt",
