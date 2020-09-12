@@ -2,14 +2,15 @@
 import glob
 from sys import argv
 script, runname = argv
-
-filenames = [xx.strip(runname + "/ref_alt/").strip(".log") for xx in glob.glob(runname + "/ref_alt/" + "*log")]
+prefix = "imputation_runs/" + runname + "/ref_alt/"
+print(prefix)
+filenames = [xx.replace(prefix, "").replace(".log", "") for xx in glob.glob("imputation_runs/" + runname + "/ref_alt/*log")]
 print(filenames)
 for xx in filenames:
-    snpfile = runname + "/snp_filtered/" + xx + ".log"
-    indfile = runname + "/individual_filtered/" + xx + ".log"
-    hwefile = runname + "/hwe_filtered/" + xx + ".log"
-	macfile = runname + "/mac_filtered/" + xx + ".log"
+    snpfile = "imputation_runs/" + runname + "/snp_filtered/" + xx + ".log"
+    indfile = "imputation_runs/" + runname + "/individual_filtered/" + xx + ".log"
+    hwefile = "imputation_runs/" + runname + "/hwe_filtered/" + xx + ".log"
+    #macfile = "imputation_runs/" + runname + "/mac_filtered/" + xx + ".log"
     print(snpfile)
     with open(snpfile, "r") as snp:
         for line in snp:
@@ -70,22 +71,22 @@ for xx in filenames:
                     print("!!HOLY SHIT WE DROPPED TOO MUCH!!\n\n")
                 else:
                     print("HWE Filtering okay\n\n")
-    with open(macfile, "r") as mac:
-        for line in mac:
-            if "variants loaded from .bim file" in line:
-                start_snps = line.split()[0]
-                print("Monmorphic_SNP_Filtering")
-                print("StartingSNPs:\t" + start_snps)
-            if "removed due to " in line:
-                rem_snps = line.split()[1]
-                end_snps = int(start_snps) - int(rem_snps)
-                proportion = int(rem_snps)/int(start_snps)
-                percent = str(round(int(rem_snps)/int(start_snps)*100, 3))
-                print("RemovedSNPs:\t" + rem_snps)
-                print("EndSNPs:\t" + str(end_snps))
-                print("PercentSNPRemoved:\t" + percent + "%")
-                #print(proportion)
-                if proportion > 0.25:
-                    print("!!HOLY SHIT WE DROPPED TOO MUCH!!\n\n")
-                else:
-                    print("Monomorphic Filtering okay\n\n")
+    # with open(macfile, "r") as mac:
+    #     for line in mac:
+    #         if "variants loaded from .bim file" in line:
+    #             start_snps = line.split()[0]
+    #             print("Monmorphic_SNP_Filtering")
+    #             print("StartingSNPs:\t" + start_snps)
+    #         if "removed due to " in line:
+    #             rem_snps = line.split()[1]
+    #             end_snps = int(start_snps) - int(rem_snps)
+    #             proportion = int(rem_snps)/int(start_snps)
+    #             percent = str(round(int(rem_snps)/int(start_snps)*100, 3))
+    #             print("RemovedSNPs:\t" + rem_snps)
+    #             print("EndSNPs:\t" + str(end_snps))
+    #             print("PercentSNPRemoved:\t" + percent + "%")
+    #             #print(proportion)
+    #             if proportion > 0.25:
+    #                 print("!!HOLY SHIT WE DROPPED TOO MUCH!!\n\n")
+    #             else:
+    #                 print("Monomorphic Filtering okay\n\n")
