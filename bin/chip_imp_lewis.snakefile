@@ -137,6 +137,7 @@ rule order_vcfs:
 	shell: #shuffle-cols does exactly what we need it to. Then bgzip and tabix output for concatenation with bcftools
 		"""
 		module load bcftools
+		export PERL5LIB=bin/vcftools_0.1.13/perl/
 		psrecord "bin/vcftools_0.1.13/perl/vcf-shuffle-cols -t {input.template} {input.vcf} > {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
 		"""
 
