@@ -1,0 +1,106 @@
+{
+    "__default__":
+    {
+        "p" : "General,Lewis,BioCompute,htc4,hpc5",
+        "account" : "animalsci",
+        "mem" : 2G,
+        "c": 4,
+        "t": "2:00:00",
+        "o": "log/{wildcards.run_name}/slurm_out/{rule}/{wildcards}.%j.out"
+    },
+    "filter_logging":
+    {
+        "c" : 1,
+        "mem" : 1G,
+        "t": "0:10:00"
+    },
+    "merge_assays":
+    {
+        "mem" : 200G,
+        "t" : "1:00:00"
+    },
+    "eagle_merged":
+    {
+        "c" : 16,
+        "mem" : 24G,
+        "t": "48:00:00"
+    },
+    "refvcf_per_assay":
+    {
+        "c" : 1,
+        "mem" : 5G,
+        "t": "2:00:00"
+    },
+    "mm4_convert":
+    {
+        "c" : 5,
+        "mem" : 10G,
+        "t": "5:00:00"
+    },
+    "refcreation_hd":
+    {
+        "c" : 8,
+        "mem" : 24G,
+        "t": "15:00:00"
+    },
+    "refcreation_f250":
+    {
+        "c" : 8,
+        "mem" : 24G,
+        "t": "15:00:00"
+    },
+    "combinerefs":
+    {
+        "c" : 1,
+        "mem" : 10G,
+        "t": "5:00:00"
+    },
+    "reformat_refs":
+    {
+        "c" : 5,
+        "mem" : 10G,
+        "t": "10:00:00"
+    },
+    "assay_chrsplit":
+    {
+        "c" : 1,
+        "mem" : 10G,
+        "t": "0:30:00"
+    },
+    "bigref_phasing":
+    {
+        "c" : 8,
+        "mem" : 20G,
+        "t": "48:00:00"
+    },
+    "imputation":
+    {
+        "c" : 8,
+        "mem" : 50G,
+        "t": "48:00:00"
+    },
+    "order_vcfs":
+    {
+        "c" : 1,
+        "mem" : 40G,
+        "t": "2:00:00"
+    },
+    "hardcall_vcf":
+    {
+        "c" : 1,
+        "mem" : 5G,
+        "t": "5:00:00"
+    },
+    "concat_hardcall_vcf":
+    {
+        "c" : 1,
+        "mem" : 10G,
+        "t": "2:00:00"
+    },
+    "concat_vcf":
+    {
+        "c" : 1,
+        "mem" : 10G,
+        "t": "2:00:00"
+    }
+}

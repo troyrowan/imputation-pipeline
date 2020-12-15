@@ -46,7 +46,7 @@ rule bigref_done: #Last file create is specified up here. Use expand to indicate
 # 		"""
 # 		module load plink
 # 		module load bcftools
-# 		psrecord "plink --bfile {params.inprefix} --cow --real-ref-alleles --chr {params.chr} --nonfounders --threads {params.threads} --memory {params.mem} --recode vcf-iid --out {params.oprefix}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
+# 		psrecord "plink --bfile {params.inprefix} --cow --real-ref-alleles --chr {params.chr} --nonfounders --threads {params.threads} --memory {params.mem} --recode vcf-iid --out {params.oprefix}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 30
 # 		"""
 #This step should allow this to be done for new reference versions provided nothing changes with the input structure in the chip_ref_creation snakefile remains the same
 rule create_testing_phasing_ref:
@@ -70,8 +70,8 @@ rule create_testing_phasing_ref:
 	shell:
 		"""
 		module load bcftools
-		psrecord "bcftools view -S ^{input.ids} {input.hdrefvcf} --force-samples -O z -o {output.hdrefvcf}; bcftools view -S ^{input.ids} {input.f250refvcf} --force-samples -O z -o {output.f250refvcf}; bcftools view -S ^{input.ids} {input.crossimprefvcf} --force-samples -O z -o {output.crossimprefvcf}; tabix {params.dir}" --log {params.psrecord} --include-children --interval 5"""
-
+		psrecord "bcftools view -S ^{input.ids} {input.hdrefvcf} --force-samples -O z -o {output.hdrefvcf}; bcftools view -S ^{input.ids} {input.f250refvcf} --force-samples -O z -o {output.f250refvcf}; bcftools view -S ^{input.ids} {input.crossimprefvcf} --force-samples -O z -o {output.crossimprefvcf}; tabix {params.dir}" --log {params.psrecord} --include-children --interval 30
+		"""
 
 rule create_testing_imp_ref:
 	input:
@@ -84,7 +84,7 @@ rule create_testing_imp_ref:
 		m3vcf = "testing/reference/imputation/{run_name}/{ref}_testing_removed.chr{chr}.m3vcf.gz"
 	shell:
 		"""
-		psrecord "/home/tnr343/Minimac3/bin/Minimac3-omp --refHaps {input.refvcf} --processReference --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+		psrecord "/home/tnr343/Minimac3/bin/Minimac3-omp --refHaps {input.refvcf} --processReference --myChromosome {params.chrom} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 30
 		"""
 
 #This should be a cross-imputed 850K
@@ -113,7 +113,7 @@ rule create_testing_imp_ref:
 # 	#Is allowRefAltSwap necessary here? What is that doing. Doublecheck.
 # 		"""
 # 		module load bcftools
-# 		psrecord "~/Eagle_v2.4.1/eagle --vcfRef {input.refvcf} --vcfTarget {input.vcf} --geneticMapFile {params.imputemap} --allowRefAltSwap --chromX {params.chrom} --numThreads {params.threads} --outPrefix {params.out}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
+# 		psrecord "~/Eagle_v2.4.1/eagle --vcfRef {input.refvcf} --vcfTarget {input.vcf} --geneticMapFile {params.imputemap} --allowRefAltSwap --chromX {params.chrom} --numThreads {params.threads} --outPrefix {params.out}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 30
 # 		"""
 #
 # rule imputation: #A single round of imputation for all target assays.
@@ -134,7 +134,7 @@ rule create_testing_imp_ref:
 # 		#vcf = "minimac_imputed/combined_imputed/{run_name}.chr{chr}.m3vcf.gz"
 # 	shell: #Minimac3 appears to be working better, not sure what the hangup with Minimac4 is, but will explore in the near future
 # 		"""
-# 		psrecord "/storage/hpc/group/UMAG/SCRIPTS/Minimac4-1.0.2/release-build/minimac4 --refHaps {input.ref} --haps {input.haps} --allTypedSites --myChromosome {params.chrom} --cpu {params.threads} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 5
+# 		psrecord "/storage/hpc/group/UMAG/SCRIPTS/Minimac4-1.0.2/release-build/minimac4 --refHaps {input.ref} --haps {input.haps} --allTypedSites --myChromosome {params.chrom} --cpu {params.threads} --prefix {params.oprefix}" --log {params.psrecord} --include-children --interval 30
 # 		"""
 #
 # # #Minimac's dosage conversion does not work at this point. If it ever does, this'll be the rule that makes it work
@@ -171,7 +171,7 @@ rule create_testing_imp_ref:
 # 	shell: #shuffle-cols does exactly what we need it to. Then bgzip and tabix output for concatenation with bcftools
 # 		"""
 # 		module load bcftools
-# 		psrecord " ~/vcftools_0.1.13/perl/vcf-shuffle-cols -t {input.template} {input.vcf} > {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5"""
+# 		psrecord " ~/vcftools_0.1.13/perl/vcf-shuffle-cols -t {input.template} {input.vcf} > {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 30"""
 #
 # # rule gwas_format: #Have changed this to do the longest step on a single chromosome basis, can't believe it took me this long...
 # # 	input:
@@ -196,7 +196,7 @@ rule create_testing_imp_ref:
 # 	shell:#This script pulls out only the hardcall vcf information from the minimac imputation output, keeps vcf format then bgzips and tabix
 # 		"""
 # 		module load bcftools
-# 		psrecord "python bin/vcf_hardcall_conversion.py {input.vcf} {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5"""
+# 		psrecord "python bin/vcf_hardcall_conversion.py {input.vcf} {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 30"""
 #
 # rule concat_hardcall_vcf:#Puts individual chromosome files back into a single VCF
 # 	input:
@@ -208,7 +208,7 @@ rule create_testing_imp_ref:
 # 		tbi = "imputation_runs/{run_name}/imputed_genotypes/{run_name}.hardcall.vcf.gz.tbi"
 # 	shell:
 # 		"""module load bcftools
-# 		psrecord "bcftools concat {input.concat} -O z -o {output.vcf}; tabix {output.vcf}"  --log {params.psrecord} --include-children --interval 5"""
+# 		psrecord "bcftools concat {input.concat} -O z -o {output.vcf}; tabix {output.vcf}"  --log {params.psrecord} --include-children --interval 30"""
 # #Use BCFtools to combine individual sorted VCF files
 # rule concat_vcf:
 # 	input:
@@ -222,7 +222,7 @@ rule create_testing_imp_ref:
 # 	shell: #List of all single-chromosome vcf files will be put onto the command line here for the concat command
 # 		"""
 # 		module load bcftools
-# 		psrecord "bcftools concat {input.vcf} -O z -o {output.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5"""
+# 		psrecord "bcftools concat {input.vcf} -O z -o {output.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 30"""
 #
 # # rule concat_mgf: #Just a basic concatentation of the MGF files
 # # 	input:

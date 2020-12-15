@@ -14,9 +14,12 @@ for x in expand("log/{run_name}/psrecord/{rule}", run_name = config['run_name'],
 
 rule bigref_done: #Last file create is specified up here. Use expand to indicate how we want wild cards filled in.
 	input:#Standard outputs for the pipeline are a dosage vcf file and a hardcall only vcf file. Have ability to make dosage input for GEMMA and other file types
-		gen = expand("imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz",
-		run_name = config["run_name"],
-		chr = list(range(1,31)))
+		gen = expand("imputation_runs/{run_name}/imputed_genotypes/{run_name}.vcf.gz",
+		run_name = config["run_name"]),
+		concat = expand("imputation_runs/{run_name}/imputed_genotypes/{run_name}.850K.{suffix}",
+		suffix = ["bed", "bim", "fam"],
+		run_name = config["run_name"])
+
 		# gen = expand("imputation_runs/{run_name}/assay_raw_vcf/{run_name}.chr{chr}.vcf.gz",
 		# run_name = config["run_name"],
 		# chr = list(range(1,31)))
@@ -74,7 +77,7 @@ rule bigref_phasing:
 	#Is allowRefAltSwap necessary here? What is that doing. Doublecheck.
 		"""
 		module load bcftools
-		psrecord "~/Eagle_v2.4.1/eagle --vcfRef {input.refvcf} --vcfTarget {input.vcf} --geneticMapFile {params.imputemap} --allowRefAltSwap --chromX {params.chrom} --numThreads {params.threads} --outPrefix {params.out}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
+		psrecord "bin/Eagle_v2.4.1/eagle --vcfRef {input.refvcf} --vcfTarget {input.vcf} --geneticMapFile {params.imputemap} --allowRefAltSwap --chromX {params.chrom} --numThreads {params.threads} --outPrefix {params.out}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
 		"""
 
 rule imputation: #A single round of imputation for all target assays.
@@ -132,15 +135,25 @@ rule order_vcfs:
 		vcf = "imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf",
 		psrecord = "log/{run_name}/psrecord/order_vcfs/order_vcfs.chr{chr}.log"
 	output:
-		vcf = temp("imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz"),
-		tabix = temp("imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz.tbi")
+		vcf = "imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz"
+		#tabix = temp("imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz.tbi")
 	shell: #shuffle-cols does exactly what we need it to. Then bgzip and tabix output for concatenation with bcftools
 		"""
 		module load bcftools
 		export PERL5LIB=bin/vcftools_0.1.13/perl/
-		psrecord "bin/vcftools_0.1.13/perl/vcf-shuffle-cols -t {input.template} {input.vcf} > {params.vcf}; bgzip {params.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5
+		psrecord "bin/vcftools_0.1.13/perl/vcf-shuffle-cols -t {input.template} {input.vcf} > {params.vcf}; bgzip {params.vcf}" --log {params.psrecord} --include-children --interval 5
 		"""
 
+rule tabix:
+	input:
+		vcf = "imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz"
+	output:
+		tabix = "imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz.tbi"
+	shell:
+		"""
+		module load bcftools
+		tabix {input.vcf}
+		"""
 # rule gwas_format: #Have changed this to do the longest step on a single chromosome basis, can't believe it took me this long...
 # 	input:
 # 		vcf = "imputation_runs/{run_name}/minimac_imputed/combined_reordered/{run_name}.chr{chr}.reordered.vcf.gz" #Reordered vcf file
@@ -168,7 +181,7 @@ rule hardcall_vcf:
 
 rule concat_hardcall_vcf:#Puts individual chromosome files back into a single VCF
 	input:
-		concat = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.hardcall.vcf.gz", chr = list(range(1,32)))
+		concat = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.hardcall.vcf.gz", chr = list(range(1,31)))
 	params:
 		psrecord = "log/{run_name}/psrecord/concat_hardcall_vcf/concat_hardcall_vcf.log"
 	output:
@@ -182,8 +195,8 @@ rule concat_hardcall_vcf:#Puts individual chromosome files back into a single VC
 #Use BCFtools to combine individual sorted VCF files
 rule concat_vcf:
 	input:
-		vcf = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.reordered.vcf.gz", chr = list(range(1,32))),
-		tabix = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.reordered.vcf.gz.tbi", chr = list(range(1,32)))
+		vcf = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.reordered.vcf.gz", chr = list(range(1,31))),
+		tabix = expand("imputation_runs/{{run_name}}/imputed_genotypes/single_chrom/{{run_name}}.chr{chr}.reordered.vcf.gz.tbi", chr = list(range(1,31)))
 	params:
 		psrecord = "log/{run_name}/psrecord/concat_vcf/concat_vcf.log"
 	output:
@@ -193,6 +206,48 @@ rule concat_vcf:
 		"""
 		module load bcftools
 		psrecord "bcftools concat {input.vcf} -O z -o {output.vcf}; tabix {output.vcf}" --log {params.psrecord} --include-children --interval 5"""
+
+rule convert_plink:
+	input:
+		vcf = "imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz", #Only Autosomes
+		tabix = "imputation_runs/{run_name}/imputed_genotypes/single_chrom/{run_name}.chr{chr}.reordered.vcf.gz.tbi"
+	params:
+		psrecord = "log/{run_name}/psrecord/convert_plink/convert_plink.chr{chr}.log",
+		oprefix = "imputation_runs/{run_name}/plink_convert/{run_name}.chr{chr}.850K",
+		threads=config["plink_threads"],
+		mem=config["plink_mem"]
+	output:
+		plink = expand("imputation_runs/{{run_name}}/plink_convert/{{run_name}}.chr{{chr}}.850K.{suffix}",
+		suffix = ["bed", "bim", "fam"]),
+	shell: #
+		"""
+		module load plink
+		psrecord "plink --vcf {input.vcf} --threads {params.threads} --memory {params.mem} --cow --real-ref-alleles --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
+		"""
+#issues with this rule making the mergelist. Did it manually to get things to run...
+
+rule concat_plink:
+	input:
+		plink = expand("imputation_runs/{{run_name}}/plink_convert/{{run_name}}.chr{chr}.850K.{suffix}",
+		suffix = ["bed", "bim", "fam"],
+		chr = list(range(1,30))) #Only autosomes here for GRM creation
+	params:
+		psrecord = "log/{run_name}/psrecord/concat_plink/concat_plink.log",
+		oprefix = "imputation_runs/{run_name}/imputed_genotypes/{run_name}.850K",
+		chromdir = "imputation_runs/{run_name}/plink_convert/*bed",
+		threads=config["plink_threads"],
+		mem=config["plink_mem"],
+		#list = "output/{run_name}/plink_convert/{run_name}.850K.mergelist.txt"
+	output:
+		list = "imputation_runs/{run_name}/plink_convert/{run_name}.850K.mergelist.txt",
+		plink = expand("imputation_runs/{{run_name}}/imputed_genotypes/{{run_name}}.850K.{suffix}",
+		suffix = ["bed", "bim", "fam"])
+	shell:
+		"""
+		module load plink
+		ls {params.chromdir} | tr "\\t" "\\n" | sed 's/.bed//g' > {output.list}
+		psrecord "plink --merge-list {output.list} --threads {params.threads} --memory {params.mem} --cow --real-ref-alleles --make-bed --out {params.oprefix}" --log {params.psrecord} --include-children --interval 30
+		"""
 
 # rule concat_mgf: #Just a basic concatentation of the MGF files
 # 	input:

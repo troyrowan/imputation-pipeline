@@ -1,0 +1,31 @@
+{
+    "__default__":
+    {
+        "p" : "General,Lewis,BioCompute,htc4,hpc5",
+        "account" : "animalsci",
+        "mem" : 2G,
+        "c": 1,
+        "t": "1:00:00",
+        "qos": "normal",
+        "o": "log/{wildcards.run_name}/slurm_out/{rule}/{wildcards}.%j.out"
+    },
+    "seq_imputation":
+    {
+        "c" : 8,
+        "mem" : 50GB,
+        "t": "96:00:00",
+        "qos": "biolong"
+    },
+    "extract_high_quality":
+    {
+        "c" : 1,
+        "mem" : 100GB,
+        "t": "48:00:00"
+    },
+    "convert_sequence_mach":
+    {
+        "c" : 8,
+        "mem" : 50G,
+        "t" : "10:00:00"
+    }
+}
