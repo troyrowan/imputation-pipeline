@@ -1,17 +1,17 @@
-# UMAG 850K Imputation Pipeline
+# UMAG Imputation Pipeline
 ## Setup and basic pipeline instructions
 
 #### Cloning repository and setting up environments 
 Navigate to directory where you want to setup imputation pipeline and clone repository \
 `git clone git@github.com:troyrowan/imputation-pipeline.git`
 
-Set up imputation conda environment from .yml file in directory\
-The first weird bit of the command deals with some weird dependency issues that I was having before\
-Solution came from: https://stackoverflow.com/questions/55661167/how-to-fix-condavalueerror-invalid-environment-name-in-conda-terminal-when-i \
-`CONDA_RESTORE_FREE_CHANNEL=1 conda env create -f imputation_env.yml`
+You'll need to activate a conda environment on Lewis that includes the relevant packages to run the pipeline.
+This string of commands should load all of the packages that you'll need to run the pipeline.
+`module load miniconda3; source activate /storage/hpc/data/tnr343/miniconda/envs/snake`
+NOTE: We may want to change the path to this environment to be somewhere shared
 
 Activate environment (This needs to be done every time prior to running Snakemake)\
-`source activate Imp3`
+`source activate snake`
 
 ### Setting up config files for imputation
 Create copy of master config file for your imputation run\
@@ -29,41 +29,49 @@ Add run-specific information into config file:
     
 Example top of config file is given below:
 ```python
-{
-  "sample":["56789.191002.500.A", "123456.191002.250.B"],
-  "gt_path":"/CIFS/MUG01_N/deckerje/tnr343/191002_genodump/",
-  "run_name":"191002_IMPRUN",
-  "ref_dir":"/data/REF_HAPS/850K/"
-  "hdref":"777962.180624.8853.A",
-  "f250ref":"227234.180624.28421.A",
-  "imp_ref_version":"180919_bigref",
-  "phasing_ref_version":"180919_bigref"
-  "mapdict" : {"139977":"/CIFS/MUG01_N/schnabelr/PLINK_FILES/9913_ARS1.2_139977_GGPHDV3_snpnumber_180613.map", ...},
-  "refdict" : {"139977":"/CIFS/MUG01_N/schnabelr/PLINK_FILES/9913_ARS1.2_139977_GGPHDV3_snpnumber_180613.REF", ...},
-  "refalleledict" : {"139977":"/CIFS/MUG01_N/schnabelr/PLINK_FILES/9913_ARS1.2_139977_GGPHDV3_snpnumber_180613.REF_ALLELE", ...}
+rules: ["ref_alt", "ref_build_start", "no_duplicates", "variant_stats", "filter_variants", "individual_stats", "filter_individuals", "hwe_stats", "filter_hwe_variants", "filter_monomorphic", "filter_logging", "merge_assays", "assay_chrsplit", "bigref_phasing", "imputation", "order_vcfs", "hardcall_vcf", "concat_hardcall_vcf", "concat_vcf", "seq_imputation", "convert_seq_mach", "tabix", "convert_plink", "concat_plink"]
+gt_path: "/storage/hpc/group/UMAG/WORKING/tnr343/imputation/chip_imputation/imputation-pipeline/imputation_runs/200921_HairShed/raw_genotypes/"
+sample: ["139977.200921.42.C", "139977.200921.74.B"]
+ref_assays: ["F250_all_ref", "HD_all_ref"]
+ref_version: "200812_chip_refbuild"
+seq_ref_version: "200708_Run8_refbuild"
+hdref: "HD_all_ref"
+f250ref: "F250_all_ref"
+run_name: "200921_HairShed"
+filter: "T90_20"
+ind_callrate_filter: 0.1
+snp_callrate_filter: 0.1
+hwe_filter: 1e-75
+mac_filter: 1
+plink_threads: 4
+plink_mem: 2000
+eagle_threads: 16
+mm_threads: 8
+mapdict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/snp_number/9913_ARS1.2_26504_GGPLDV3_snp_number_200806.map", ...}
+refdict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/snp_number/9913_ARS1.2_26504_GGPLDV3_snp_number_200806.REF", ...}
+refalleledict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/snp_number/9913_ARS1.2_26504_GGPLDV3_snp_number_200806.REF_ALLELE", ...}
 }
+```
+
 ```
 **NOTE**
 As new assays become available, the dictionaries `"mapdict"`, `"refdict"`, and `"refalleledict"` that refer to corresponding `.map`, `.REF`, and `.REF_ALLELE` 
 files need to be updated as well. Where the key is `"nsnps"` and value is the absolute file path to each of the three files
 
-### Running imputation pipeline
+### Running imputation pipeline (850K SNPs)
 Upon setting up config file, execute a "dry-run" of Snakemake to ensure that it sees all necessary files, etc.\
-`snakemake -s imputation.snakefile --configfile config/my_imprun_config.json -np`
+`snakemake -s bin/chip_imp_lewis.snakefile --configfile config/my_imprun_config.json -np`
 
-Snakemake will cycle through rules and you can check to make sure shell commands/outputs look correct
+Snakemake will cycle through rules and you can check to make sure shell commands/outputs look correct. Errors will be thrown if there are issues in config file, etc.
 
-Then run imputation pipeline with the following command, specifying an appropriate number of cores and pointing output information to 
-a log file:\
-`snakemake -s imputation.snakefile --configfile config/my_imprun_config.json --cores 60 -p &> my_imprun_snakemakerun.log`
+Then run imputation pipeline with the following command, specifying the appropriate cluster config file which can be edited if available resources don't suffice:\
+`snakemake -s bin/chip_imp_lewis.snakefile --configfile config/my_imprun_config.json --cluster-config code/cluster/cluster/chip_imp_lewis.cluster.json --cluster "sbatch -p {cluster.p} -o {cluster.o} --account {cluster.account} -t {cluster.t} -c {cluster.c} --mem {cluster.mem}" --jobs 30 -p &> imputation_runs/my_imprun/my_imprun_snakemakerun.log``
 
 ### Endpoint files
-The pipeline as is outputs the following files:
-* Filter logging counts
+The pipeline as is outputs the following files in this directory (`imputation_runs/my_imprun/imputed_genotypes`):
+* Filter logging `my_imprun_filtering_report.txt`
     + A single file that has filter logging for each filtering step (SNP call rate, individual call rate, and HWE p-value) for each assay. 
-* Concatenated hardcall/dosage VCF file (in `run_name/imputed_genotypes/` subdirectory)
+* Concatenated hardcall/dosage VCF file (in `imputation_runs/my_imprun/imputed_genotypes/` subdirectory)
     + This is the version of VCF file that comes out of Minimac where genotyeps are represnted like: `1|1:1.999`
     + Here the first half of each SNP for each individual is a phased hard call and after the : is the additive dosage genotype
-* Hardcall only VCF file (in `run_name/imputed_genotypes/` subdirectory)
-    + I use a script to manually extract only hardcall genotypes from above
-    + This can be used in other softwares to convert to nearly any other genotype file format
+* Binary PLINK files (*.bed, *.bim, *.fam)
