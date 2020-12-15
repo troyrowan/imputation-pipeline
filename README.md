@@ -18,7 +18,7 @@ Create copy of master config file for your imputation run\
 `cp config/master_config.json config/my_imprun_config.json`
 
 Add run-specific information into config file: 
-* Only first three items should need changed
+* Only the following items should need changed
 * Updates to reference should be reflected in updated master config (which you can get from a `git pull`)
 * `sample`
     + List of `.ped` file prefixes in the format: `nsnps.date.nindividuals.manifest`
@@ -26,8 +26,10 @@ Add run-specific information into config file:
     + Absolute path to where raw ped files reside
 * `run_name`
     + Whatever you choose your imputation run name to be
+* Changes to filtering parameters can also be altered here, but traditional filtering is propogated through when master config is copied
     
 Example top of config file is given below:
+
 ```python
 rules: ["ref_alt", "ref_build_start", "no_duplicates", "variant_stats", "filter_variants", "individual_stats", "filter_individuals", "hwe_stats", "filter_hwe_variants", "filter_monomorphic", "filter_logging", "merge_assays", "assay_chrsplit", "bigref_phasing", "imputation", "order_vcfs", "hardcall_vcf", "concat_hardcall_vcf", "concat_vcf", "seq_imputation", "convert_seq_mach", "tabix", "convert_plink", "concat_plink"]
 gt_path: "/storage/hpc/group/UMAG/WORKING/tnr343/imputation/chip_imputation/imputation-pipeline/imputation_runs/200921_HairShed/raw_genotypes/"
@@ -53,7 +55,6 @@ refalleledict: {"26504":"/storage/hpc/group/UMAG/PLINK_FILES/snp_number/9913_ARS
 }
 ```
 
-```
 **NOTE**
 As new assays become available, the dictionaries `"mapdict"`, `"refdict"`, and `"refalleledict"` that refer to corresponding `.map`, `.REF`, and `.REF_ALLELE` 
 files need to be updated as well. Where the key is `"nsnps"` and value is the absolute file path to each of the three files
@@ -65,7 +66,7 @@ Upon setting up config file, execute a "dry-run" of Snakemake to ensure that it 
 Snakemake will cycle through rules and you can check to make sure shell commands/outputs look correct. Errors will be thrown if there are issues in config file, etc.
 
 Then run imputation pipeline with the following command, specifying the appropriate cluster config file which can be edited if available resources don't suffice:\
-`snakemake -s bin/chip_imp_lewis.snakefile --configfile config/my_imprun_config.json --cluster-config code/cluster/cluster/chip_imp_lewis.cluster.json --cluster "sbatch -p {cluster.p} -o {cluster.o} --account {cluster.account} -t {cluster.t} -c {cluster.c} --mem {cluster.mem}" --jobs 30 -p &> imputation_runs/my_imprun/my_imprun_snakemakerun.log``
+`snakemake -s bin/chip_imp_lewis.snakefile --configfile config/my_imprun_config.json --cluster-config code/cluster/cluster/chip_imp_lewis.cluster.json --cluster "sbatch -p {cluster.p} -o {cluster.o} --account {cluster.account} -t {cluster.t} -c {cluster.c} --mem {cluster.mem}" --jobs 30 -p &> imputation_runs/my_imprun/my_imprun_snakemakerun.log`
 
 ### Endpoint files
 The pipeline as is outputs the following files in this directory (`imputation_runs/my_imprun/imputed_genotypes`):
@@ -75,3 +76,26 @@ The pipeline as is outputs the following files in this directory (`imputation_ru
     + This is the version of VCF file that comes out of Minimac where genotyeps are represnted like: `1|1:1.999`
     + Here the first half of each SNP for each individual is a phased hard call and after the : is the additive dosage genotype
 * Binary PLINK files (*.bed, *.bim, *.fam)
+
+
+### Running imputation pipeline (Sequence)
+Chip-level QC and imputation (shown previously) is linked to this pipeline, so won't need to be run separately \
+Config files should be the same as for running 850K imputation \
+Upon setting up config file, execute a "dry-run" of Snakemake to ensure that it sees all necessary files, etc. \
+`snakemake -s bin/seq_imputation.snakefile --configfile config/my_imprun_config.json -np`
+
+Snakemake will cycle through rules and you can check to make sure shell commands/outputs look correct. Errors will be thrown if there are issues in config file, etc.
+
+Then run imputation pipeline with the following command, specifying the appropriate cluster config file which can be edited if available resources don't suffice:\
+`snakemake -s bin/seq_imputation.snakefile --configfile config/my_imprun_config.json --cluster-config code/cluster/cluster/seq_imputation.cluster.json --cluster "sbatch -p {cluster.p} -o {cluster.o} --account {cluster.account} -t {cluster.t} -c {cluster.c} --mem {cluster.mem} --qos {cluster.qos}" --jobs 30 -p &> imputation_runs/my_imprun/my_imprun_snakemakerun.log`\
+
+*NOTE*: The one thing to keep an eye on is the QOS that is needed for imputation. Most chromosomes (in 100K animal datasets) will run in under 2 days. However larger chromosomes may need to be run on the `biolong` QOS. This can all be changed in the cluster config file. 
+
+
+### Endpoint files
+The pipeline as is outputs the following files in this directory (`imputation_runs/my_imprun/seq_imputed`): 
+* Single-chromosome hardcall/dosage VCF files (in `imputation_runs/my_imprun/seq_imputed/` subdirectory)
+    + This is the version of VCF file that comes out of Minimac where genotyeps are represnted like: `1|1:1.999`
+    + Here the first half of each SNP for each individual is a phased hard call and after the : is the additive dosage genotype
+    + Minimac info file with imputation accuracy, allele frequencies, etc. 
+* The 850K genotypes and endpoint files mentioned above will also exist in the same `imputation_runs/my_imprun/imputed_genotypes` directory. 
